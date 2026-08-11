@@ -1,40 +1,86 @@
 // backend/controllers/orderController.js
 const asyncHandler = require('../utils/asyncHandler');
-const { notImplemented } = require('../utils/response');
-// TODO: const Order = require('../models/Order');
-// TODO: const { calculateOrderTotals } = require('../services/orderService');
-// TODO: const { sendEmail } = require('../services/emailService');
+const { success, error } = require('../utils/response');
+const Order = require('../models/Order');
 
-// POST /api/orders
-// TODO: Validate body via orderRules. Compute totals with calculateOrderTotals(items, taxPct, deliveryFee)
-// pulled from CafeSettings. Attach req.user?.id if authenticated (guest checkout allowed).
-// Create Order.create({...}), optionally send confirmation email.
+const generateOrderCode = () => {
+  const random = Math.floor(1000 + Math.random() * 9000);
+  const timestamp = Date.now().toString().slice(-6);
+  return `MN-${timestamp}-${random}`;
+};
+
 const createOrder = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Create order');
+  if (!req.user?.id) {
+    return error(res, 401, 'Login required to place an order');
+  }
+
+  const { customerDetails, items, subtotal, tax, deliveryFee, totalAmount, paymentMethod } = req.body;
+  const computedSubtotal = items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0);
+  const computedTotal = Number((computedSubtotal + Number(tax) + Number(deliveryFee)).toFixed(2));
+
+  if (Number(subtotal) !== Number(computedSubtotal) || Number(totalAmount) !== computedTotal) {
+    return error(res, 400, 'Order totals are invalid');
+  }
+
+  const order = await Order.create({
+    user: req.user.id,
+    code: generateOrderCode(),
+    customerDetails,
+    items,
+    subtotal: Number(subtotal),
+    tax: Number(tax),
+    deliveryFee: Number(deliveryFee),
+    totalAmount: Number(totalAmount),
+    paymentMethod,
+  });
+
+  return success(res, 201, order, 'Order created successfully');
 });
 
-// GET /api/orders (admin) - list all orders
-// TODO: Support pagination/filter by orderStatus/paymentStatus; Order.find().populate('user items.item').
 const getOrders = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'List all orders');
+  const orders = await Order.find().populate('user', 'name email phone role').sort('-createdAt');
+  return success(res, 200, orders, 'Orders retrieved');
 });
 
-// GET /api/orders/:id
-// TODO: Order.findById(req.params.id).populate('user items.item'); ensure requester owns it or is admin.
 const getOrderById = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Get order by id');
+  const order = await Order.findById(req.params.id).populate('user', 'name email phone role');
+
+  if (!order) {
+    return error(res, 404, 'Order not found');
+  }
+
+  const isOwner = order.user && String(order.user._id) === String(req.user.id);
+  if (!isOwner && req.user.role !== 'admin') {
+    return error(res, 403, 'Not authorized to view this order');
+  }
+
+  return success(res, 200, order, 'Order retrieved');
 });
 
-// PUT /api/orders/:id/status (admin)
-// TODO: Validate new orderStatus against enum; Order.findByIdAndUpdate(id, { orderStatus }, { new: true }).
 const updateOrderStatus = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Update order status');
+  const { orderStatus } = req.body;
+  const validStatuses = Order.schema.path('orderStatus').enumValues;
+
+  if (!validStatuses.includes(orderStatus)) {
+    return error(res, 400, 'Invalid order status');
+  }
+
+  const order = await Order.findByIdAndUpdate(
+    req.params.id,
+    { orderStatus },
+    { new: true },
+  ).populate('user', 'name email phone role');
+
+  if (!order) {
+    return error(res, 404, 'Order not found');
+  }
+
+  return success(res, 200, order, 'Order status updated');
 });
 
-// GET /api/orders/my (protected) - current user's orders
-// TODO: Order.find({ user: req.user.id }).sort('-createdAt').
 const getMyOrders = asyncHandler(async (req, res) => {
-  return notImplemented(res, "List current user's orders");
+  const orders = await Order.find({ user: req.user.id }).sort('-createdAt');
+  return success(res, 200, orders, 'User orders retrieved');
 });
 
 module.exports = { createOrder, getOrders, getOrderById, updateOrderStatus, getMyOrders };

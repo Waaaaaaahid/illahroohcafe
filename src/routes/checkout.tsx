@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Banknote, CreditCard, Lock, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/AppButton";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
@@ -30,9 +30,17 @@ export const Route = createFileRoute("/checkout")({
 function CheckoutPage() {
   const { lines, subtotal, tax, deliveryFee, total, clearCart } = useCart();
   const { settings } = useCafe();
-  const { user } = useAuth();
+  const { user, isReady } = useAuth();
   const { notify } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isReady) return;
+    if (!user && lines.length > 0) {
+      notify('Please sign in to place your order', { variant: 'info' });
+      void navigate({ to: '/login' });
+    }
+  }, [isReady, user, lines.length, notify, navigate]);
 
   const [form, setForm] = useState<CheckoutForm & { notes: string }>({
     name: user?.name ?? "",
@@ -57,7 +65,6 @@ function CheckoutPage() {
     setPlacing(true);
     try {
       const order = await orderService.create({
-        userId: user?._id ?? "guest",
         customerDetails: {
           name: form.name,
           phone: form.phone,
@@ -115,6 +122,22 @@ function CheckoutPage() {
               <Button>
                 <ShoppingBag className="size-4" /> Browse the menu
               </Button>
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
+
+  if (!isReady || !user) {
+    return (
+      <div className="container-page py-20">
+        <EmptyState
+          title="Sign in to place your order"
+          description="Please sign in or register before continuing to checkout."
+          action={
+            <Link to="/login">
+              <Button>Sign in</Button>
             </Link>
           }
         />

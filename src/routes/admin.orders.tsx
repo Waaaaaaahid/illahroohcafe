@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "@/services/orderService";
@@ -62,10 +62,27 @@ function OrderCard({ order, onStatusChange, updating }: {
 
 function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const [prevOrderCount, setPrevOrderCount] = useState(0);
   const queryClient = useQueryClient();
   const { notify } = useToast();
 
-  const ordersQuery = useQuery({ queryKey: ["admin-orders"], queryFn: orderService.listAll });
+  const ordersQuery = useQuery({
+    queryKey: ["admin-orders"],
+    queryFn: orderService.listAll,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: true,
+  });
+
+  useEffect(() => {
+    if (!ordersQuery.data) return;
+    const currentCount = ordersQuery.data.length;
+    if (prevOrderCount > 0 && currentCount > prevOrderCount) {
+      notify(`New order received (${currentCount - prevOrderCount})`, { variant: "success" });
+    }
+    if (currentCount !== prevOrderCount) {
+      setPrevOrderCount(currentCount);
+    }
+  }, [ordersQuery.data, prevOrderCount, notify]);
 
   const statusMutation = useMutation({
     mutationFn: (input: { id: string; status: OrderStatus }) =>
@@ -139,7 +156,13 @@ function AdminOrders() {
                 {orders.map((order) => (
                   <tr key={order._id} className="border-b border-border last:border-0 align-top">
                     <td className="px-5 py-3 font-semibold text-foreground">{order.code}</td>
-                    <td className="px-5 py-3 text-muted-foreground">{order.customerDetails.name}</td>
+                    <td className="px-5 py-3 text-muted-foreground">
+                      <p className="font-semibold text-foreground">{order.customerDetails.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {order.customerDetails.email} · {order.customerDetails.phone}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{order.customerDetails.address}</p>
+                    </td>
                     <td className="max-w-xs px-5 py-3 text-muted-foreground">
                       {order.items.map((item) => `${item.quantity}× ${item.name}`).join(", ")}
                     </td>

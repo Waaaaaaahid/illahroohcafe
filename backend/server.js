@@ -9,7 +9,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 
-// const connectDB = require('./config/db'); // TODO: uncomment when ready to connect
+const connectDB = require('./config/db');
 
 const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
@@ -68,14 +68,11 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// TODO: connectDB()
-// Before starting the server for real, uncomment the import above and call:
-//   connectDB().then(() => { app.listen(...) });
-// This skeleton intentionally starts the HTTP server WITHOUT a database connection.
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-    console.log('NOTE: MongoDB is NOT connected yet. See config/db.js and the TODO in server.js.');
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    });
   });
 }
 

@@ -12,7 +12,7 @@ router.get('/my', protect, orderController.getMyOrders);
 
 router
   .route('/')
-  .post(orderRules, validate, orderController.createOrder) // guest checkout allowed
+  .post(protect, orderRules, validate, orderController.createOrder)
   .get(protect, admin, orderController.getOrders);
 
 router.get('/:id', protect, orderController.getOrderById);

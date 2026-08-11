@@ -14,6 +14,7 @@ const orderItemSchema = new mongoose.Schema(
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    code: { type: String, required: true, unique: true },
     customerDetails: {
       name: { type: String, required: true },
       phone: { type: String, required: true },

@@ -3,7 +3,6 @@ import { mockApi } from "@/lib/mock/mockApi";
 import type { CustomerDetails, Order, OrderItem, OrderStatus, PaymentMethod } from "@/lib/types";
 
 export interface CreateOrderInput {
-  userId: string;
   customerDetails: CustomerDetails;
   items: OrderItem[];
   subtotal: number;
