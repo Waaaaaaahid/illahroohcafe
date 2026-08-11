@@ -64,9 +64,9 @@ export function CartDrawer() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     Add something warm from the menu.
                   </p>
-                  <Button className="mt-6" onClick={closeCart} asChild={false}>
-                    <Link to="/menu">Browse the menu</Link>
-                  </Button>
+                  <Link to="/menu" onClick={closeCart} className="mt-6">
+                    <Button>Browse the menu</Button>
+                  </Link>
                 </div>
               ) : (
                 <ul className="space-y-3">
