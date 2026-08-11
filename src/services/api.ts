@@ -55,7 +55,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(headers ?? {}),
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? null : JSON.stringify(body),
   });
 
   const payload = await response.json().catch(() => null);
