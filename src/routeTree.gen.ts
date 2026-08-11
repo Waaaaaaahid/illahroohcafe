@@ -10,11 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as MenuRouteImport } from './routes/menu'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminMenuRouteImport } from './routes/admin.menu'
+import { Route as AdminMenuIdRouteImport } from './routes/admin.menu.$id'
+import { Route as AdminMenuNewRouteImport } from './routes/admin.menu.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -22,31 +34,111 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MenuRoute = MenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMenuRoute = AdminMenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMenuIdRoute = AdminMenuIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminMenuRoute,
+} as any)
+const AdminMenuNewRoute = AdminMenuNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminMenuRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/contact': typeof ContactRoute
+  '/menu': typeof MenuRoute
+  '/admin/menu': typeof AdminMenuRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
+  '/admin/menu/$id': typeof AdminMenuIdRoute
+  '/admin/menu/new': typeof AdminMenuNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
+  '/menu': typeof MenuRoute
+  '/admin/menu': typeof AdminMenuRouteWithChildren
+  '/admin': typeof AdminIndexRoute
+  '/admin/menu/$id': typeof AdminMenuIdRoute
+  '/admin/menu/new': typeof AdminMenuNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/contact': typeof ContactRoute
+  '/menu': typeof MenuRoute
+  '/admin/menu': typeof AdminMenuRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
+  '/admin/menu/$id': typeof AdminMenuIdRoute
+  '/admin/menu/new': typeof AdminMenuNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/contact'
+    | '/menu'
+    | '/admin/menu'
+    | '/admin/'
+    | '/admin/menu/$id'
+    | '/admin/menu/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin'
-  id: '__root__' | '/' | '/admin'
+  to:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/menu'
+    | '/admin/menu'
+    | '/admin'
+    | '/admin/menu/$id'
+    | '/admin/menu/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/contact'
+    | '/menu'
+    | '/admin/menu'
+    | '/admin/'
+    | '/admin/menu/$id'
+    | '/admin/menu/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  ContactRoute: typeof ContactRoute
+  MenuRoute: typeof MenuRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +150,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -65,12 +164,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/menu': {
+      id: '/menu'
+      path: '/menu'
+      fullPath: '/menu'
+      preLoaderRoute: typeof MenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/menu': {
+      id: '/admin/menu'
+      path: '/menu'
+      fullPath: '/admin/menu'
+      preLoaderRoute: typeof AdminMenuRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/menu/$id': {
+      id: '/admin/menu/$id'
+      path: '/$id'
+      fullPath: '/admin/menu/$id'
+      preLoaderRoute: typeof AdminMenuIdRouteImport
+      parentRoute: typeof AdminMenuRoute
+    }
+    '/admin/menu/new': {
+      id: '/admin/menu/new'
+      path: '/new'
+      fullPath: '/admin/menu/new'
+      preLoaderRoute: typeof AdminMenuNewRouteImport
+      parentRoute: typeof AdminMenuRoute
+    }
   }
 }
 
+interface AdminMenuRouteChildren {
+  AdminMenuIdRoute: typeof AdminMenuIdRoute
+  AdminMenuNewRoute: typeof AdminMenuNewRoute
+}
+
+const AdminMenuRouteChildren: AdminMenuRouteChildren = {
+  AdminMenuIdRoute: AdminMenuIdRoute,
+  AdminMenuNewRoute: AdminMenuNewRoute,
+}
+
+const AdminMenuRouteWithChildren = AdminMenuRoute._addFileChildren(
+  AdminMenuRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminMenuRoute: typeof AdminMenuRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminMenuRoute: AdminMenuRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AboutRoute: AboutRoute,
+  AdminRoute: AdminRouteWithChildren,
+  ContactRoute: ContactRoute,
+  MenuRoute: MenuRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
