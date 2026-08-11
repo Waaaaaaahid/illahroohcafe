@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { initials } from "@/utils/format";
 import { cn } from "@/lib/utils";
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
@@ -34,7 +34,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
