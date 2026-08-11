@@ -5,7 +5,7 @@ export type ToastVariant = "success" | "error" | "warning" | "info";
 export interface Toast {
   id: string;
   title: string;
-  description?: string;
+  description?: string | undefined;
   variant: ToastVariant;
 }
 

@@ -33,7 +33,7 @@ export interface MenuItem {
   available: boolean;
   popular: boolean;
   vegetarian: boolean;
-  rating?: number;
+  rating?: number | undefined;
   createdAt: string;
   updatedAt: string;
 }
@@ -52,7 +52,7 @@ export interface CustomerDetails {
   phone: string;
   email: string;
   address: string;
-  notes?: string;
+  notes?: string | undefined;
 }
 
 export type PaymentMethod = "cod" | "online";
