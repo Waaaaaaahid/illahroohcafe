@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Leaf, Plus, Star } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/AppButton";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import { useCafe } from "@/context/CafeContext";

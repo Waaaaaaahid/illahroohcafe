@@ -1,5 +1,5 @@
 import { AlertCircle, Inbox, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/AppButton";
 import { cn } from "@/lib/utils";
 
 export function Skeleton({ className }: { className?: string }) {
