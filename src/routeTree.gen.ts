@@ -19,6 +19,8 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as OrderSuccessRouteImport } from './routes/order-success'
+import { Route as OrderTrackingRouteImport } from './routes/order-tracking'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -78,6 +80,16 @@ const MenuRoute = MenuRouteImport.update({
 const OrderSuccessRoute = OrderSuccessRouteImport.update({
   id: '/order-success',
   path: '/order-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderTrackingRoute = OrderTrackingRouteImport.update({
+  id: '/order-tracking',
+  path: '/order-tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -142,6 +154,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/order-success': typeof OrderSuccessRoute
+  '/order-tracking': typeof OrderTrackingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -163,6 +177,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/order-success': typeof OrderSuccessRoute
+  '/order-tracking': typeof OrderTrackingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -186,6 +202,8 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/order-success': typeof OrderSuccessRoute
+  '/order-tracking': typeof OrderTrackingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -210,6 +228,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/menu'
     | '/order-success'
+    | '/order-tracking'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/admin/categories'
@@ -231,6 +251,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/menu'
     | '/order-success'
+    | '/order-tracking'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/admin/categories'
@@ -253,6 +275,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/menu'
     | '/order-success'
+    | '/order-tracking'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/admin/categories'
@@ -276,6 +300,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
   OrderSuccessRoute: typeof OrderSuccessRoute
+  OrderTrackingRoute: typeof OrderTrackingRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
 }
@@ -350,6 +376,20 @@ declare module '@tanstack/react-router' {
       path: '/order-success'
       fullPath: '/order-success'
       preLoaderRoute: typeof OrderSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order-tracking': {
+      id: '/order-tracking'
+      path: '/order-tracking'
+      fullPath: '/order-tracking'
+      preLoaderRoute: typeof OrderTrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -470,6 +510,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
   OrderSuccessRoute: OrderSuccessRoute,
+  OrderTrackingRoute: OrderTrackingRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
 }
