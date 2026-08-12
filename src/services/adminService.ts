@@ -1,4 +1,4 @@
-import { api, USE_MOCK_API, getStoredSession } from "@/services/api";
+import { api, USE_MOCK_API, API_BASE_URL, getStoredSession } from "@/services/api";
 import { mockApi } from "@/lib/mock/mockApi";
 import type { CafeSettings, Category, MenuItem, User } from "@/lib/types";
 
@@ -31,21 +31,27 @@ export const adminService = {
   updateSettings: (input: Partial<CafeSettings>) =>
     USE_MOCK_API ? mockApi.updateSettings(input) : api.put<CafeSettings>("/cafe/settings", input),
 
-  /**
-   * Image upload for menu items. Backend: POST /api/menu/upload with multer,
-   * stored locally under backend/uploads and served at /uploads/*.
-   */
+  /** Upload menu image through the same API base used everywhere else. */
   uploadImage: async (file: File) => {
     if (USE_MOCK_API) return { url: URL.createObjectURL(file), publicId: "mock_public_id" };
+
+    if (!API_BASE_URL) throw new Error("Backend API URL is not configured");
+
     const form = new FormData();
     form.append("image", file);
     const token = getStoredSession()?.token;
-    const response = await fetch(`${import.meta.env["VITE_API_URL"]}/menu/upload`, {
+
+    const response = await fetch(`${API_BASE_URL}/menu/upload`, {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: form,
     });
-    if (!response.ok) throw new Error("Upload failed");
-    return (await response.json()) as { url: string; publicId: string };
+
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(payload?.message || "Upload failed");
+    }
+
+    return (payload?.data ?? payload) as { url: string; publicId: string };
   },
 };
