@@ -35,13 +35,10 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ]
   .flatMap((value) => (value ? value.split(",") : []))
-  .map((value) => value.trim())
+  .map((value) => value.trim().replace(/\/$/, ""))
   .filter(Boolean);
 
-if (!allowedOrigins.length) {
-  if (isProduction) {
-    throw new Error("CLIENT_URL or FRONTEND_URL is required in production");
-  }
+if (!allowedOrigins.length && !isProduction) {
   allowedOrigins.push("http://localhost:5173");
 }
 
@@ -52,7 +49,15 @@ app.use(helmet());
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      if (!origin) return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/$/, "");
+      const isCodespacesOrigin = /^https:\/\/[^/]+-\d+\.app\.github\.dev$/.test(normalizedOrigin);
+      const isAllowed = allowedOrigins.includes(normalizedOrigin);
+
+      if (isAllowed || (!isProduction && isCodespacesOrigin)) {
+        return callback(null, true);
+      }
+
       return callback(new Error("CORS origin not allowed"));
     },
     credentials: true,
@@ -60,7 +65,6 @@ app.use(
 );
 
 app.use(morgan(isProduction ? "combined" : "dev"));
-
 app.use(
   "/api",
   rateLimit({
@@ -71,7 +75,7 @@ app.use(
   })
 );
 
-// Razorpay webhooks require the exact raw request body for signature verification.
+// Razorpay webhook needs the exact raw request body for signature verification.
 app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
@@ -104,7 +108,7 @@ const PORT = process.env.PORT || 5000;
 if (require.main === module) {
   connectDB()
     .then(() => {
-      app.listen(PORT, () => {
+      app.listen(PORT, "0.0.0.0", () => {
         console.log(
           `Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`
         );
