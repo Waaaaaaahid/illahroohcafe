@@ -1,5 +1,3 @@
-// backend/server.js
-
 require("dotenv").config();
 
 const path = require("path");
@@ -11,7 +9,6 @@ const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
 
 const connectDB = require("./config/db");
-
 const authRoutes = require("./routes/authRoutes");
 const menuRoutes = require("./routes/menuRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
@@ -20,95 +17,69 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const cafeRoutes = require("./routes/cafeRoutes");
-
-const {
-  notFound,
-  errorHandler,
-} = require("./middleware/errorMiddleware");
+const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
-
-// --------------------------------------------------
-// Environment
-// --------------------------------------------------
+const isProduction = process.env.NODE_ENV === "production";
 
 if (!process.env.JWT_SECRET) {
-  console.warn(
-    "JWT_SECRET is not set. Using development fallback secret."
-  );
-
-  process.env.JWT_SECRET = "dev-secret";
+  if (isProduction) {
+    throw new Error("JWT_SECRET is required in production");
+  }
+  console.warn("JWT_SECRET is not set; using a development-only fallback.");
+  process.env.JWT_SECRET = "dev-only-change-me";
 }
 
-if (!process.env.CLIENT_URL) {
-  process.env.CLIENT_URL = "http://localhost:5173";
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+]
+  .flatMap((value) => (value ? value.split(",") : []))
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+if (!allowedOrigins.length) {
+  if (isProduction) {
+    throw new Error("CLIENT_URL or FRONTEND_URL is required in production");
+  }
+  allowedOrigins.push("http://localhost:5173");
 }
 
-// --------------------------------------------------
-// Security
-// --------------------------------------------------
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
 
 app.use(helmet());
-
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("CORS origin not allowed"));
+    },
     credentials: true,
   })
 );
 
-// --------------------------------------------------
-// Logging
-// --------------------------------------------------
+app.use(morgan(isProduction ? "combined" : "dev"));
 
 app.use(
-  morgan(
-    process.env.NODE_ENV === "production"
-      ? "combined"
-      : "dev"
-  )
+  "/api",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
 );
 
-// --------------------------------------------------
-// Rate Limiting
-// --------------------------------------------------
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use("/api", apiLimiter);
-
-// --------------------------------------------------
-// Body Parsers
-// --------------------------------------------------
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// --------------------------------------------------
-// Mongo Sanitize
-// --------------------------------------------------
-
+// Razorpay webhooks require the exact raw request body for signature verification.
+app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(mongoSanitize());
 
-// --------------------------------------------------
-// Uploaded Files
-// --------------------------------------------------
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "uploads"))
-);
-
-// --------------------------------------------------
-// Health Check
-// --------------------------------------------------
-
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req, res) => {
   res.status(200).json({
     success: true,
     message: "API is healthy",
@@ -116,37 +87,17 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// --------------------------------------------------
-// Routes
-// --------------------------------------------------
-
 app.use("/api/auth", authRoutes);
-
 app.use("/api/menu", menuRoutes);
-
 app.use("/api/categories", categoryRoutes);
-
 app.use("/api/orders", orderRoutes);
-
 app.use("/api/payment", paymentRoutes);
-
 app.use("/api/users", userRoutes);
-
 app.use("/api/admin", adminRoutes);
-
 app.use("/api/cafe", cafeRoutes);
 
-// --------------------------------------------------
-// Error Handling
-// --------------------------------------------------
-
 app.use(notFound);
-
 app.use(errorHandler);
-
-// --------------------------------------------------
-// Local Development Server
-// --------------------------------------------------
 
 const PORT = process.env.PORT || 5000;
 
@@ -155,24 +106,14 @@ if (require.main === module) {
     .then(() => {
       app.listen(PORT, () => {
         console.log(
-          `Server running in ${
-            process.env.NODE_ENV || "development"
-          } mode on port ${PORT}`
+          `Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`
         );
       });
     })
     .catch((error) => {
-      console.error(
-        "Failed to start server:",
-        error.message
-      );
-
+      console.error("Failed to start server:", error.message);
       process.exit(1);
     });
 }
-
-// --------------------------------------------------
-// Export for Vercel
-// --------------------------------------------------
 
 module.exports = app;
