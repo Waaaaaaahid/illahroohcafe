@@ -3,13 +3,29 @@ import type { AuthSession } from "@/lib/types";
 
 const configuredApiUrl = (import.meta.env["VITE_API_URL"] as string | undefined)?.trim();
 
-// Local development can use the local Express server. Production must provide
-// VITE_API_URL so the frontend never silently points at localhost after deploy.
-export const API_BASE_URL: string =
-  configuredApiUrl?.replace(/\/$/, "") ||
-  (import.meta.env.DEV ? "http://localhost:5000/api" : "");
+function getDefaultApiUrl() {
+  // Explicit env always wins. Use this for Vercel/production deployments.
+  if (configuredApiUrl) return configuredApiUrl.replace(/\/$/, "");
 
-export const USE_MOCK_API: boolean =
+  // Local Vite development.
+  if (import.meta.env.DEV) {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      // GitHub Codespaces forwards each port through a hostname such as
+      // <codespace>-5173.app.github.dev. Automatically target port 5000.
+      if (host.endsWith(".app.github.dev")) {
+        return `${window.location.protocol}//${host.replace(/-5173(?=\.app\.github\.dev$)/, "-5000")}/api`;
+      }
+    }
+    return "http://localhost:5000/api";
+  }
+
+  return "";
+}
+
+export const API_BASE_URL = getDefaultApiUrl();
+
+export const USE_MOCK_API =
   (import.meta.env["VITE_USE_MOCK_API"] as string | undefined) === "true";
 
 export class ApiError extends Error {
