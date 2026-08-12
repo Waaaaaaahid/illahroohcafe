@@ -12,7 +12,11 @@ export const authService = {
       ? mockApi.login(input.email, input.password)
       : api.post<AuthSession>("/auth/login", input, { auth: false }),
 
-  me: () => (USE_MOCK_API ? Promise.reject(new Error("Not available in mock mode")) : api.get<User>("/auth/me")),
+  me: async () => {
+    if (USE_MOCK_API) return Promise.reject(new Error("Not available in mock mode"));
+    const response = await api.get<{ user: User }>("/auth/me");
+    return response.user;
+  },
 
   forgotPassword: (email: string) =>
     USE_MOCK_API
