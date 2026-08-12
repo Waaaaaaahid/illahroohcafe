@@ -8,10 +8,10 @@ import { MenuItemForm, emptyMenuItemForm, type MenuItemFormValues } from "@/comp
 export const Route = createFileRoute("/admin/menu/new")({
   head: () => ({
     meta: [
-      { title: "Add Menu Item — Maison Noir Admin" },
-      { name: "description", content: "Create a new item for the Maison Noir menu." },
-      { property: "og:title", content: "Add Menu Item — Maison Noir Admin" },
-      { property: "og:description", content: "Create a new item for the Maison Noir menu." },
+      { title: "Add Menu Item — Ilarooh Admin" },
+      { name: "description", content: "Create a new item for the Ilarooh menu." },
+      { property: "og:title", content: "Add Menu Item — Ilarooh Admin" },
+      { property: "og:description", content: "Create a new item for the Ilarooh menu." },
     ],
   }),
   component: AdminMenuNew,

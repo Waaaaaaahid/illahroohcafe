@@ -1,30 +1,57 @@
 // backend/controllers/categoryController.js
 const asyncHandler = require('../utils/asyncHandler');
-const { notImplemented } = require('../utils/response');
-// TODO: const Category = require('../models/Category');
+const Category = require('../models/Category');
+const { notImplemented, success, error } = require('../utils/response');
 
 // GET /api/categories
-// TODO: return Category.find({ active: true }).sort('name');
 const getCategories = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'List categories');
+  const categories = await Category.find({ active: true }).sort('name');
+  return success(res, 200, categories);
 });
 
 // POST /api/categories (admin)
-// TODO: Generate slug from name (slugify), then Category.create({...req.body, slug}).
 const createCategory = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Create category');
+  const { name, description, image, active } = req.body;
+  const slug = String(req.body.slug || name)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const existing = await Category.findOne({ slug });
+  if (existing) {
+    return error(res, 400, 'Category slug already exists');
+  }
+
+  const category = await Category.create({
+    name,
+    slug,
+    description,
+    image,
+    active: active !== undefined ? active : true,
+  });
+  return success(res, 201, category, 'Category created');
 });
 
 // PUT /api/categories/:id (admin)
-// TODO: Category.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }).
 const updateCategory = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Update category');
+  const category = await Category.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+  if (!category) {
+    return error(res, 404, 'Category not found');
+  }
+  return success(res, 200, category, 'Category updated');
 });
 
 // DELETE /api/categories/:id (admin)
-// TODO: Consider soft-delete (active:false) vs hard delete; check MenuItems referencing it first.
 const deleteCategory = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Delete category');
+  const category = await Category.findByIdAndDelete(req.params.id);
+  if (!category) {
+    return error(res, 404, 'Category not found');
+  }
+  return success(res, 200, { _id: req.params.id }, 'Category deleted');
 });
 
 module.exports = { getCategories, createCategory, updateCategory, deleteCategory };

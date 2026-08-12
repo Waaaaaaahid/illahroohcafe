@@ -94,12 +94,12 @@ export const mockPayments: Payment[] = [
 ];
 
 export const mockCafeSettings: CafeSettings = {
-  name: "Maison Noir",
+  name: "Ilarooh",
   logo: "",
   description:
     "A slow-craft coffee house and kitchen in Mumbai. Single-origin roasts, stone-baked plates, and a room built for lingering.",
   phone: "+91 98200 10101",
-  email: "hello@maisonnoir.cafe",
+  email: "hello@ilarooh.cafe",
   address: "14 Waterfield Road, Bandra West, Mumbai 400050",
   openingHours: [
     { day: "Monday – Thursday", hours: "08:00 – 23:00" },

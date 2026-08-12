@@ -11,9 +11,9 @@ import { validateLogin, type FieldErrors, type LoginForm } from "@/utils/validat
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Sign in — Maison Noir" },
-      { name: "description", content: "Sign in to your Maison Noir account to order, track deliveries and view past orders." },
-      { property: "og:title", content: "Sign in to Maison Noir" },
+      { title: "Sign in — Ilarooh" },
+      { name: "description", content: "Sign in to your Ilarooh account to order, track deliveries and view past orders." },
+      { property: "og:title", content: "Sign in to Ilarooh" },
       { property: "og:description", content: "Access your orders, addresses and rewards." },
     ],
   }),

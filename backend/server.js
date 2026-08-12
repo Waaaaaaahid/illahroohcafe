@@ -2,6 +2,7 @@
 // Express app entrypoint. This skeleton is NOT connected to a live MongoDB instance.
 require('dotenv').config();
 
+const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -23,6 +24,15 @@ const cafeRoutes = require('./routes/cafeRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
+
+if (!process.env.JWT_SECRET) {
+  console.warn('JWT_SECRET is not set. Using development fallback secret. Do not use in production.');
+  process.env.JWT_SECRET = 'dev-secret';
+}
+
+if (!process.env.CLIENT_URL) {
+  process.env.CLIENT_URL = 'http://localhost:5173';
+}
 
 // ---- Security & core middleware ----
 app.use(helmet());
@@ -46,6 +56,9 @@ app.use('/api', apiLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
+
+// Serve locally uploaded menu item images (from POST /api/menu/upload).
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ---- Health check ----
 app.get('/api/health', (req, res) => {

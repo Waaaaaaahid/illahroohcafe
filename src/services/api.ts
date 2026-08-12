@@ -10,9 +10,12 @@ import type { AuthSession } from "@/lib/types";
 export const API_BASE_URL: string =
   (import.meta.env["VITE_API_URL"] as string | undefined) ?? "http://localhost:5000/api";
 
-/** While the Express backend is not connected, services fall back to the mock layer. */
+/**
+ * Use the mock API only when explicitly enabled.
+ * By default the app uses the real backend API for end-to-end order flow.
+ */
 export const USE_MOCK_API: boolean =
-  (import.meta.env["VITE_USE_MOCK_API"] as string | undefined) !== "false";
+  (import.meta.env["VITE_USE_MOCK_API"] as string | undefined) === "true";
 
 export class ApiError extends Error {
   status: number;
@@ -21,6 +24,14 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.status = status;
   }
+}
+
+export const AUTH_UNAUTHORIZED_EVENT = "auth:unauthorized";
+
+export function clearStoredSession() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEYS.session);
+  window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
 }
 
 export function getStoredSession(): AuthSession | null {
@@ -61,6 +72,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
+    if (auth && response.status === 401) clearStoredSession();
     const message =
       (payload as { message?: string } | null)?.message ?? `Request failed (${response.status})`;
     throw new ApiError(message, response.status);

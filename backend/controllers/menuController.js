@@ -1,44 +1,125 @@
 // backend/controllers/menuController.js
+const mongoose = require('mongoose');
 const asyncHandler = require('../utils/asyncHandler');
-const { notImplemented } = require('../utils/response');
-// TODO: const MenuItem = require('../models/MenuItem');
+const MenuItem = require('../models/MenuItem');
+const Category = require('../models/Category');
+const { notImplemented, success, error } = require('../utils/response');
+
+const toClientItem = (item) => ({
+  ...item.toObject(),
+  category: item.category?.slug ?? '',
+  image: item.image?.url ?? '',
+});
+
+const resolveCategoryId = async (slug) => {
+  if (!slug) return null;
+  const category = await Category.findOne({ slug });
+  return category ? category._id : null;
+};
+
+const normalizeImage = (image) => {
+  if (!image) return undefined;
+  if (typeof image === 'string') return { url: image };
+  return image;
+};
 
 // GET /api/menu
-// TODO: Support query params (category, available, popular, search) and
-// return MenuItem.find(filters).populate('category').
 const getMenuItems = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'List menu items');
+  const filters = {};
+  if (req.query.category) {
+    const categoryDoc = await Category.findOne({ slug: req.query.category });
+    if (categoryDoc) {
+      filters.category = categoryDoc._id;
+    } else if (mongoose.isValidObjectId(req.query.category)) {
+      filters.category = req.query.category;
+    } else {
+      return success(res, 200, []);
+    }
+  }
+  if (req.query.available) filters.available = req.query.available === 'true';
+  if (req.query.popular) filters.popular = req.query.popular === 'true';
+  if (req.query.search) {
+    filters.name = { $regex: req.query.search, $options: 'i' };
+  }
+
+  const menuItems = await MenuItem.find(filters).populate('category');
+  const items = menuItems.map(toClientItem);
+
+  return success(res, 200, items);
 });
 
 // POST /api/menu (admin)
-// TODO: Validate body via menuItemRules, then MenuItem.create({...req.body}).
-// TODO: Handle optional image upload via uploadService middleware upstream.
 const createMenuItem = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Create menu item');
+  const categoryId = await resolveCategoryId(req.body.category);
+  if (!categoryId) {
+    return error(res, 400, 'Category not found');
+  }
+
+  const menuItem = await MenuItem.create({
+    ...req.body,
+    category: categoryId,
+    image: normalizeImage(req.body.image),
+  });
+
+  const created = await menuItem.populate('category');
+  return success(res, 201, toClientItem(created), 'Menu item created');
 });
 
 // GET /api/menu/:id
-// TODO: MenuItem.findById(req.params.id).populate('category'); 404 if not found.
 const getMenuItemById = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Get menu item by id');
+  const menuItem = await MenuItem.findById(req.params.id).populate('category');
+  if (!menuItem) {
+    return error(res, 404, 'Menu item not found');
+  }
+  return success(res, 200, toClientItem(menuItem), 'Menu item retrieved');
 });
 
 // PUT /api/menu/:id (admin)
-// TODO: MenuItem.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }).
 const updateMenuItem = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Update menu item');
+  const update = { ...req.body };
+  if (update.category) {
+    update.category = await resolveCategoryId(update.category);
+    if (!update.category) {
+      return error(res, 400, 'Category not found');
+    }
+  }
+  if (update.image) {
+    update.image = normalizeImage(update.image);
+  }
+
+  const menuItem = await MenuItem.findByIdAndUpdate(req.params.id, update, {
+    new: true,
+    runValidators: true,
+  }).populate('category');
+
+  if (!menuItem) {
+    return error(res, 404, 'Menu item not found');
+  }
+  return success(res, 200, toClientItem(menuItem), 'Menu item updated');
 });
 
 // DELETE /api/menu/:id (admin)
-// TODO: MenuItem.findByIdAndDelete(req.params.id); also delete Cloudinary image via publicId.
+// TODO: Also delete Cloudinary image via publicId.
 const deleteMenuItem = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Delete menu item');
+  const menuItem = await MenuItem.findByIdAndDelete(req.params.id);
+  if (!menuItem) {
+    return error(res, 404, 'Menu item not found');
+  }
+  return success(res, 200, { _id: req.params.id }, 'Menu item deleted');
 });
 
 // PATCH /api/menu/:id/availability (admin)
-// TODO: Toggle or set `available` field: MenuItem.findByIdAndUpdate(id, { available: req.body.available }).
 const updateAvailability = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Update menu item availability');
+  const menuItem = await MenuItem.findByIdAndUpdate(
+    req.params.id,
+    { available: req.body.available },
+    { new: true, runValidators: true },
+  ).populate('category');
+
+  if (!menuItem) {
+    return error(res, 404, 'Menu item not found');
+  }
+  return success(res, 200, toClientItem(menuItem), 'Availability updated');
 });
 
 module.exports = {

@@ -15,10 +15,10 @@ import type { MenuItem } from "@/lib/types";
 export const Route = createFileRoute("/admin/menu")({
   head: () => ({
     meta: [
-      { title: "Menu Management — Maison Noir Admin" },
-      { name: "description", content: "Add, edit and manage every item on the Maison Noir menu." },
-      { property: "og:title", content: "Menu Management — Maison Noir Admin" },
-      { property: "og:description", content: "Add, edit and manage every item on the Maison Noir menu." },
+      { title: "Menu Management — Ilarooh Admin" },
+      { name: "description", content: "Add, edit and manage every item on the Ilarooh menu." },
+      { property: "og:title", content: "Menu Management — Ilarooh Admin" },
+      { property: "og:description", content: "Add, edit and manage every item on the Ilarooh menu." },
     ],
   }),
   component: AdminMenu,

@@ -13,9 +13,9 @@ export const Route = createFileRoute("/reset-password")({
   }),
   head: () => ({
     meta: [
-      { title: "Set a new password — Maison Noir" },
-      { name: "description", content: "Choose a new password for your Maison Noir account using your reset token." },
-      { property: "og:title", content: "Set a new Maison Noir password" },
+      { title: "Set a new password — Ilarooh" },
+      { name: "description", content: "Choose a new password for your Ilarooh account using your reset token." },
+      { property: "og:title", content: "Set a new Ilarooh password" },
       { property: "og:description", content: "Complete your password reset securely." },
     ],
   }),

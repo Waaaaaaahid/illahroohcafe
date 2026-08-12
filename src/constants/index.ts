@@ -1,6 +1,6 @@
 import type { OrderStatus } from "@/lib/types";
 
-export const APP_NAME = "Maison Noir";
+export const APP_NAME = "Ilarooh";
 
 export const NAV_LINKS = [
   { label: "Home", to: "/" },

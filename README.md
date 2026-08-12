@@ -1,4 +1,4 @@
-# Maison Noir — Cafe Ordering Platform
+# Ilarooh — Cafe Ordering Platform
 
 A production-grade cafe ordering website: premium storefront, cart + checkout, order
 tracking, authentication UI, and a full admin dashboard — plus a **complete but

@@ -10,9 +10,9 @@ import { isEmail } from "@/utils/validators";
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
-      { title: "Reset your password — Maison Noir" },
-      { name: "description", content: "Request a password reset link for your Maison Noir account." },
-      { property: "og:title", content: "Forgot your Maison Noir password?" },
+      { title: "Reset your password — Ilarooh" },
+      { name: "description", content: "Request a password reset link for your Ilarooh account." },
+      { property: "og:title", content: "Forgot your Ilarooh password?" },
       { property: "og:description", content: "We'll email you a secure reset link." },
     ],
   }),

@@ -9,10 +9,10 @@ import { EmptyState, ErrorState, TableSkeleton } from "@/components/Loading/Load
 export const Route = createFileRoute("/admin/payments")({
   head: () => ({
     meta: [
-      { title: "Payments — Maison Noir Admin" },
-      { name: "description", content: "Review the payment ledger for Maison Noir orders." },
-      { property: "og:title", content: "Payments — Maison Noir Admin" },
-      { property: "og:description", content: "Review the payment ledger for Maison Noir orders." },
+      { title: "Payments — Ilarooh Admin" },
+      { name: "description", content: "Review the payment ledger for Ilarooh orders." },
+      { property: "og:title", content: "Payments — Ilarooh Admin" },
+      { property: "og:description", content: "Review the payment ledger for Ilarooh orders." },
     ],
   }),
   component: AdminPayments,

@@ -14,9 +14,9 @@ export const Route = createFileRoute("/order-success")({
   }),
   head: () => ({
     meta: [
-      { title: "Order confirmed — Maison Noir" },
-      { name: "description", content: "Your Maison Noir order is confirmed. Track its progress from kitchen to doorstep." },
-      { property: "og:title", content: "Order confirmed — Maison Noir" },
+      { title: "Order confirmed — Ilarooh" },
+      { name: "description", content: "Your Ilarooh order is confirmed. Track its progress from kitchen to doorstep." },
+      { property: "og:title", content: "Order confirmed — Ilarooh" },
       { property: "og:description", content: "Thanks for ordering. Your kitchen ticket is live." },
     ],
   }),

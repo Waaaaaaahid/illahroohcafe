@@ -1,4 +1,4 @@
-import { api, USE_MOCK_API } from "@/services/api";
+import { api, USE_MOCK_API, getStoredSession } from "@/services/api";
 import { mockApi } from "@/lib/mock/mockApi";
 import type { CafeSettings, Category, MenuItem, User } from "@/lib/types";
 
@@ -32,15 +32,17 @@ export const adminService = {
     USE_MOCK_API ? mockApi.updateSettings(input) : api.put<CafeSettings>("/cafe/settings", input),
 
   /**
-   * Cloudinary-ready upload. TODO (backend): POST /api/menu/upload with multer +
-   * multer-storage-cloudinary — see backend/services/uploadService.js.
+   * Image upload for menu items. Backend: POST /api/menu/upload with multer,
+   * stored locally under backend/uploads and served at /uploads/*.
    */
   uploadImage: async (file: File) => {
     if (USE_MOCK_API) return { url: URL.createObjectURL(file), publicId: "mock_public_id" };
     const form = new FormData();
     form.append("image", file);
+    const token = getStoredSession()?.token;
     const response = await fetch(`${import.meta.env["VITE_API_URL"]}/menu/upload`, {
       method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: form,
     });
     if (!response.ok) throw new Error("Upload failed");

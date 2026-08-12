@@ -15,10 +15,10 @@ import type { Category } from "@/lib/types";
 export const Route = createFileRoute("/admin/categories")({
   head: () => ({
     meta: [
-      { title: "Categories — Maison Noir Admin" },
-      { name: "description", content: "Organise Maison Noir's menu categories." },
-      { property: "og:title", content: "Categories — Maison Noir Admin" },
-      { property: "og:description", content: "Organise Maison Noir's menu categories." },
+      { title: "Categories — Ilarooh Admin" },
+      { name: "description", content: "Organise Ilarooh's menu categories." },
+      { property: "og:title", content: "Categories — Ilarooh Admin" },
+      { property: "og:description", content: "Organise Ilarooh's menu categories." },
     ],
   }),
   component: AdminCategories,

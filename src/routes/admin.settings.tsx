@@ -10,9 +10,9 @@ import { adminService } from "@/services/adminService";
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
     meta: [
-      { title: "Cafe settings — Maison Noir Admin" },
+      { title: "Cafe settings — Ilarooh Admin" },
       { name: "description", content: "Update cafe details, delivery fee, tax, currency and social links." },
-      { property: "og:title", content: "Cafe settings — Maison Noir Admin" },
+      { property: "og:title", content: "Cafe settings — Ilarooh Admin" },
       { property: "og:description", content: "Manage the cafe profile used across the storefront." },
     ],
   }),

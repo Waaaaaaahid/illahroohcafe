@@ -18,16 +18,16 @@ export const Route = createFileRoute("/menu")({
   }),
   head: () => ({
     meta: [
-      { title: "Menu — Coffee, Pizza, Pasta & Desserts | Maison Noir" },
+      { title: "Menu — Coffee, Pizza, Pasta & Desserts | Ilarooh" },
       {
         name: "description",
         content:
-          "Browse the full Maison Noir menu: single-origin coffee, smash burgers, stone-baked pizza, fresh pasta, patisserie and cold-pressed drinks.",
+          "Browse the full Ilarooh menu: single-origin coffee, smash burgers, stone-baked pizza, fresh pasta, patisserie and cold-pressed drinks.",
       },
-      { property: "og:title", content: "The Maison Noir Menu" },
+      { property: "og:title", content: "The Ilarooh Menu" },
       {
         property: "og:description",
-        content: "Search, filter and order from the full Maison Noir kitchen and coffee bar.",
+        content: "Search, filter and order from the full Ilarooh kitchen and coffee bar.",
       },
     ],
   }),

@@ -15,10 +15,10 @@ import {
 export const Route = createFileRoute("/admin/menu/$id")({
   head: () => ({
     meta: [
-      { title: "Edit Menu Item — Maison Noir Admin" },
-      { name: "description", content: "Update details for an existing Maison Noir menu item." },
-      { property: "og:title", content: "Edit Menu Item — Maison Noir Admin" },
-      { property: "og:description", content: "Update details for an existing Maison Noir menu item." },
+      { title: "Edit Menu Item — Ilarooh Admin" },
+      { name: "description", content: "Update details for an existing Ilarooh menu item." },
+      { property: "og:title", content: "Edit Menu Item — Ilarooh Admin" },
+      { property: "og:description", content: "Update details for an existing Ilarooh menu item." },
     ],
   }),
   component: AdminMenuEdit,

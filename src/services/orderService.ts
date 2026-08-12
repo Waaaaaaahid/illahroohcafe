@@ -1,6 +1,17 @@
-import { api, USE_MOCK_API } from "@/services/api";
+import {
+  api,
+  USE_MOCK_API,
+  API_BASE_URL,
+  getStoredSession,
+} from "@/services/api";
 import { mockApi } from "@/lib/mock/mockApi";
-import type { CustomerDetails, Order, OrderItem, OrderStatus, PaymentMethod } from "@/lib/types";
+import type {
+  CustomerDetails,
+  Order,
+  OrderItem,
+  OrderStatus,
+  PaymentMethod,
+} from "@/lib/types";
 
 export interface CreateOrderInput {
   customerDetails: CustomerDetails;
@@ -12,17 +23,243 @@ export interface CreateOrderInput {
   paymentMethod: PaymentMethod;
 }
 
-/** POST /api/orders, GET /api/orders, GET /api/orders/:id, PUT /api/orders/:id/status */
+type OrderEvent = {
+  type: "new-order" | "order-updated" | "initial-order";
+  order: Order;
+};
+
 export const orderService = {
   create: (input: CreateOrderInput) =>
-    USE_MOCK_API ? mockApi.createOrder(input) : api.post<Order>("/orders", input),
+    USE_MOCK_API
+      ? mockApi.createOrder(input)
+      : api.post<Order>("/orders", input),
+
   listMine: (userId: string) =>
-    USE_MOCK_API ? mockApi.listMyOrders(userId) : api.get<Order[]>("/orders/my"),
-  listAll: () => (USE_MOCK_API ? mockApi.listOrders() : api.get<Order[]>("/orders")),
+    USE_MOCK_API
+      ? mockApi.listMyOrders(userId)
+      : api.get<Order[]>("/orders/my"),
+
+  listAll: () =>
+    USE_MOCK_API
+      ? mockApi.listOrders()
+      : api.get<Order[]>("/orders"),
+
   get: (orderId: string) =>
-    USE_MOCK_API ? mockApi.getOrder(orderId) : api.get<Order>(`/orders/${orderId}`),
+    USE_MOCK_API
+      ? mockApi.getOrder(orderId)
+      : api.get<Order>(`/orders/${orderId}`),
+
   updateStatus: (orderId: string, orderStatus: OrderStatus) =>
     USE_MOCK_API
       ? mockApi.updateOrderStatus(orderId, orderStatus)
       : api.put<Order>(`/orders/${orderId}/status`, { orderStatus }),
+
+  // Customer realtime order updates
+  subscribeOrder: (
+    orderId: string,
+    onOrder: (order: Order) => void
+  ): (() => void) => {
+    if (USE_MOCK_API) return () => {};
+
+    let closed = false;
+    let controller: AbortController | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const connect = async () => {
+      if (closed) return;
+
+      controller = new AbortController();
+
+      const token = getStoredSession()?.token;
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/orders/${orderId}/events`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "text/event-stream",
+              ...(token
+                ? { Authorization: `Bearer ${token}` }
+                : {}),
+            },
+            signal: controller.signal,
+          }
+        );
+
+        if (!response.ok || !response.body) {
+          throw new Error(`Events failed (${response.status})`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        let buffer = "";
+
+        while (!closed) {
+          const { done, value } = await reader.read();
+
+          if (done) break;
+
+          buffer += decoder.decode(value, {
+            stream: true,
+          });
+
+          let boundary: number;
+
+          while (
+            (boundary = buffer.indexOf("\n\n")) !== -1
+          ) {
+            const chunk = buffer.slice(0, boundary);
+
+            buffer = buffer.slice(boundary + 2);
+
+            const dataLine = chunk
+              .split(/\r?\n/)
+              .find((line) => line.startsWith("data:"));
+
+            if (!dataLine) continue;
+
+            try {
+              const event = JSON.parse(
+                dataLine.slice(5).trim()
+              ) as OrderEvent;
+
+              if (event?.order) {
+                onOrder(event.order);
+              }
+            } catch {
+              // Ignore malformed SSE data
+            }
+          }
+        }
+      } catch {
+        if (closed) return;
+      }
+
+      if (!closed) {
+        reconnectTimer = setTimeout(connect, 3000);
+      }
+    };
+
+    void connect();
+
+    return () => {
+      closed = true;
+
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+
+      controller?.abort();
+    };
+  },
+
+  // Admin realtime order stream
+  subscribeAdminOrders: (
+    onEvent: (event: OrderEvent) => void
+  ): (() => void) => {
+    if (USE_MOCK_API) return () => {};
+
+    let closed = false;
+    let controller: AbortController | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const connect = async () => {
+      if (closed) return;
+
+      controller = new AbortController();
+
+      const token = getStoredSession()?.token;
+
+      try {
+        // IMPORTANT:
+        // Backend route is /orders/admin/events
+        const response = await fetch(
+          `${API_BASE_URL}/orders/admin/events`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "text/event-stream",
+              ...(token
+                ? { Authorization: `Bearer ${token}` }
+                : {}),
+            },
+            signal: controller.signal,
+          }
+        );
+
+        if (!response.ok || !response.body) {
+          throw new Error(
+            `Admin events failed (${response.status})`
+          );
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        let buffer = "";
+
+        while (!closed) {
+          const { done, value } = await reader.read();
+
+          if (done) break;
+
+          buffer += decoder.decode(value, {
+            stream: true,
+          });
+
+          let boundary: number;
+
+          while (
+            (boundary = buffer.indexOf("\n\n")) !== -1
+          ) {
+            const chunk = buffer.slice(0, boundary);
+
+            buffer = buffer.slice(boundary + 2);
+
+            const dataLine = chunk
+              .split(/\r?\n/)
+              .find((line) => line.startsWith("data:"));
+
+            if (!dataLine) continue;
+
+            try {
+              const event = JSON.parse(
+                dataLine.slice(5).trim()
+              ) as OrderEvent;
+
+              if (
+                event?.type === "new-order" ||
+                event?.type === "order-updated" ||
+                event?.type === "initial-order"
+              ) {
+                onEvent(event);
+              }
+            } catch {
+              // Ignore malformed SSE data
+            }
+          }
+        }
+      } catch {
+        if (closed) return;
+      }
+
+      if (!closed) {
+        reconnectTimer = setTimeout(connect, 3000);
+      }
+    };
+
+    void connect();
+
+    return () => {
+      closed = true;
+
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+
+      controller?.abort();
+    };
+  },
 };

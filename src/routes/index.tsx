@@ -13,16 +13,16 @@ import { useCafe } from "@/context/CafeContext";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Maison Noir — Slow-craft coffee house & kitchen in Bandra" },
+      { title: "Ilarooh — Slow-craft coffee house & kitchen in Bandra" },
       {
         name: "description",
         content:
-          "Single-origin coffee, stone-baked pizza and patisserie, delivered in 25 minutes. Order online from Maison Noir, Bandra West.",
+          "Single-origin coffee, stone-baked pizza and patisserie, delivered in 25 minutes. Order online from Ilarooh, Bandra West.",
       },
-      { property: "og:title", content: "Maison Noir — Coffee worth slowing down for" },
+      { property: "og:title", content: "Ilarooh — Coffee worth slowing down for" },
       {
         property: "og:description",
-        content: "Order single-origin coffee and kitchen plates from Maison Noir, Bandra West.",
+        content: "Order single-origin coffee and kitchen plates from Ilarooh, Bandra West.",
       },
     ],
   }),
@@ -123,7 +123,7 @@ function HomePage() {
 
       {/* Why us */}
       <section className="container-page section-padding">
-        <SectionHeading eyebrow="Why Maison Noir" title="Built on four non-negotiables" />
+        <SectionHeading eyebrow="Why Ilarooh" title="Built on four non-negotiables" />
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {WHY_US.map((feature, index) => (
             <motion.div

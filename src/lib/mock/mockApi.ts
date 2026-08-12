@@ -113,7 +113,7 @@ export const mockApi = {
     return clone(found);
   },
   async createOrder(input: {
-    userId: string;
+    userId?: string;
     customerDetails: CustomerDetails;
     items: OrderItem[];
     subtotal: number;
@@ -126,7 +126,7 @@ export const mockApi = {
     const order: Order = {
       _id: id("o"),
       code: `MN-${10242 + db.orders.length}`,
-      user: input.userId,
+      user: input.userId ?? "",
       customerDetails: input.customerDetails,
       items: input.items,
       subtotal: input.subtotal,

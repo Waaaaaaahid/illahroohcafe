@@ -15,9 +15,9 @@ import { formatCurrency, formatDate, initials } from "@/utils/format";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Your profile & orders — Maison Noir" },
-      { name: "description", content: "Manage your Maison Noir profile details and review your previous orders." },
-      { property: "og:title", content: "Your Maison Noir profile" },
+      { title: "Your profile & orders — Ilarooh" },
+      { name: "description", content: "Manage your Ilarooh profile details and review your previous orders." },
+      { property: "og:title", content: "Your Ilarooh profile" },
       { property: "og:description", content: "Profile details and order history in one place." },
     ],
   }),

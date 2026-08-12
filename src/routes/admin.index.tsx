@@ -15,9 +15,9 @@ import { ORDER_STATUSES } from "@/lib/types";
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Maison Noir Admin" },
+      { title: "Dashboard — Ilarooh Admin" },
       { name: "description", content: "Overview of orders, revenue and menu performance." },
-      { property: "og:title", content: "Dashboard — Maison Noir Admin" },
+      { property: "og:title", content: "Dashboard — Ilarooh Admin" },
       { property: "og:description", content: "Overview of orders, revenue and menu performance." },
     ],
   }),
@@ -95,7 +95,7 @@ function AdminDashboard() {
         <p className="eyebrow text-accent">Overview</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">Dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          A snapshot of how Maison Noir is performing right now.
+          A snapshot of how Ilarooh is performing right now.
         </p>
       </div>
 

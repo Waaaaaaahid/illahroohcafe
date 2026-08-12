@@ -10,8 +10,15 @@ const mongoose = require('mongoose');
  */
 const connectDB = async () => {
   try {
-    // TODO: Ensure process.env.MONGO_URI is set (see backend/.env.example).
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
+    const mongoUri =
+      process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/illahroohcafe';
+    if (!process.env.MONGO_URI) {
+      console.warn(
+        'MONGO_URI is not set. Falling back to local MongoDB at mongodb://127.0.0.1:27017/illahroohcafe',
+      );
+    }
+
+    const conn = await mongoose.connect(mongoUri, {
       // Mongoose 8+ no longer needs useNewUrlParser/useUnifiedTopology,
       // but keep this options object here for any future flags.
     });

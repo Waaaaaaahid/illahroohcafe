@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { authService } from "@/services/authService";
-import { getStoredSession, setStoredSession } from "@/services/api";
+import { getStoredSession, setStoredSession, AUTH_UNAUTHORIZED_EVENT } from "@/services/api";
 import type { AuthSession, User } from "@/lib/types";
 
 interface AuthContextValue {
@@ -36,6 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setSession(getStoredSession());
     setIsReady(true);
+  }, []);
+
+  useEffect(() => {
+    const handleUnauthorized = () => setSession(null);
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
   }, []);
 
   const persist = useCallback((next: AuthSession | null) => {

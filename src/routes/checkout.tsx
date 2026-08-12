@@ -18,9 +18,9 @@ import type { PaymentMethod } from "@/lib/types";
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Checkout — Maison Noir" },
-      { name: "description", content: "Enter your delivery details and pay by card or cash on delivery for your Maison Noir order." },
-      { property: "og:title", content: "Checkout — Maison Noir" },
+      { title: "Checkout — Ilarooh" },
+      { name: "description", content: "Enter your delivery details and pay by card or cash on delivery for your Ilarooh order." },
+      { property: "og:title", content: "Checkout — Ilarooh" },
       { property: "og:description", content: "Secure checkout with cash on delivery or online payment." },
     ],
   }),
@@ -87,12 +87,16 @@ function CheckoutPage() {
 
       if (method === "online") {
         // Razorpay-ready: the server creates the order and verifies the signature.
-        // Add VITE_RAZORPAY_KEY_ID and the backend keys to complete this flow.
-        await paymentService.createRazorpayOrder({ orderId: order._id, amount: total });
-        notify("Payment gateway not connected yet", {
-          description: "Order recorded — add your Razorpay keys to take live payments.",
-          variant: "info",
-        });
+        // The order is already recorded; a missing gateway must not fail checkout.
+        try {
+          await paymentService.createRazorpayOrder({ orderId: order._id, amount: total });
+        } catch (error) {
+          notify("Payment gateway not connected yet", {
+            description:
+              "Your order is confirmed — add your Razorpay keys to take live payments.",
+            variant: "info",
+          });
+        }
       }
 
       if (typeof window !== "undefined") {

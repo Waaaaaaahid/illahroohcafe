@@ -10,16 +10,16 @@ import { isEmail } from "@/utils/validators";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact Maison Noir — Bandra West, Mumbai" },
+      { title: "Contact Ilarooh — Bandra West, Mumbai" },
       {
         name: "description",
         content:
-          "Call, WhatsApp or write to Maison Noir. Find our address, opening hours and reservation details in Bandra West, Mumbai.",
+          "Call, WhatsApp or write to Ilarooh. Find our address, opening hours and reservation details in Bandra West, Mumbai.",
       },
-      { property: "og:title", content: "Contact Maison Noir" },
+      { property: "og:title", content: "Contact Ilarooh" },
       {
         property: "og:description",
-        content: "Address, hours and reservations for Maison Noir, Bandra West.",
+        content: "Address, hours and reservations for Ilarooh, Bandra West.",
       },
     ],
   }),

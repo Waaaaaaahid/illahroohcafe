@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { Check, PackageSearch, Truck } from "lucide-react";
 import { Button } from "@/components/ui/AppButton";
 import { Field, TextInput } from "@/components/ui/Field";
@@ -16,9 +16,9 @@ export const Route = createFileRoute("/order-tracking")({
   }),
   head: () => ({
     meta: [
-      { title: "Track your order — Maison Noir" },
-      { name: "description", content: "Follow your Maison Noir order live from the kitchen pass to your doorstep." },
-      { property: "og:title", content: "Track your Maison Noir order" },
+      { title: "Track your order — Ilarooh" },
+      { name: "description", content: "Follow your Ilarooh order live from the kitchen pass to your doorstep." },
+      { property: "og:title", content: "Track your Ilarooh order" },
       { property: "og:description", content: "Live status from confirmed to delivered." },
     ],
   }),
@@ -28,6 +28,7 @@ export const Route = createFileRoute("/order-tracking")({
 function OrderTrackingPage() {
   const { orderId } = Route.useSearch();
   const { settings } = useCafe();
+  const queryClient = useQueryClient();
   const [reference, setReference] = useState(orderId ?? "");
   const [active, setActive] = useState(orderId ?? "");
 
@@ -36,9 +37,26 @@ function OrderTrackingPage() {
     queryFn: () => orderService.get(active),
     enabled: Boolean(active),
   });
+  useEffect(() => {
+  if (!active) return;
 
-  const order = query.data;
-  const currentIndex = order ? ORDER_STATUS_FLOW.indexOf(order.orderStatus) : -1;
+  const unsubscribe = orderService.subscribeOrder(
+    active,
+    (updatedOrder) => {
+      queryClient.setQueryData(
+        ["order", active],
+        updatedOrder
+      );
+    }
+  );
+
+  return unsubscribe;
+}, [active, queryClient]);
+
+const order = query.data;
+const orderStatus = order?.orderStatus;
+const finished = !order || orderStatus === "Cancelled" || orderStatus === "Completed";
+const currentIndex = order && orderStatus ? ORDER_STATUS_FLOW.indexOf(orderStatus) : -1;
 
   return (
     <div className="container-page py-14">
