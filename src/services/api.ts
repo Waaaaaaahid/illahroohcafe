@@ -1,19 +1,14 @@
-/**
- * Centralised API client.
- *
- * Base URL comes from VITE_API_URL (see .env.example), never hardcoded in
- * components. Every service in src/services/* goes through this client.
- */
 import { STORAGE_KEYS } from "@/constants";
 import type { AuthSession } from "@/lib/types";
 
-export const API_BASE_URL: string =
-  (import.meta.env["VITE_API_URL"] as string | undefined) ?? "http://localhost:5000/api";
+const configuredApiUrl = (import.meta.env["VITE_API_URL"] as string | undefined)?.trim();
 
-/**
- * Use the mock API only when explicitly enabled.
- * By default the app uses the real backend API for end-to-end order flow.
- */
+// Local development can use the local Express server. Production must provide
+// VITE_API_URL so the frontend never silently points at localhost after deploy.
+export const API_BASE_URL: string =
+  configuredApiUrl?.replace(/\/$/, "") ||
+  (import.meta.env.DEV ? "http://localhost:5000/api" : "");
+
 export const USE_MOCK_API: boolean =
   (import.meta.env["VITE_USE_MOCK_API"] as string | undefined) === "true";
 
@@ -57,6 +52,11 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, auth = true, headers, ...rest } = options;
+
+  if (!USE_MOCK_API && !API_BASE_URL) {
+    throw new ApiError("VITE_API_URL is not configured for this deployment", 500);
+  }
+
   const token = auth ? getStoredSession()?.token : undefined;
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
