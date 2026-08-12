@@ -4,21 +4,12 @@ import type { AuthSession } from "@/lib/types";
 const configuredApiUrl = (import.meta.env["VITE_API_URL"] as string | undefined)?.trim();
 
 function getDefaultApiUrl() {
-  // Explicit env always wins. Use this for Vercel/production deployments.
+  // Production/staging: explicitly point to the deployed Express API.
   if (configuredApiUrl) return configuredApiUrl.replace(/\/$/, "");
 
-  // Local Vite development.
-  if (import.meta.env.DEV) {
-    if (typeof window !== "undefined") {
-      const host = window.location.hostname;
-      // GitHub Codespaces forwards each port through a hostname such as
-      // <codespace>-5173.app.github.dev. Automatically target port 5000.
-      if (host.endsWith(".app.github.dev")) {
-        return `${window.location.protocol}//${host.replace(/-5173(?=\.app\.github\.dev$)/, "-5000")}/api`;
-      }
-    }
-    return "http://localhost:5000/api";
-  }
+  // Local VS Code + GitHub Codespaces: use the Vite same-origin proxy.
+  // This avoids browser CORS/port forwarding problems entirely.
+  if (import.meta.env.DEV) return "/api";
 
   return "";
 }
