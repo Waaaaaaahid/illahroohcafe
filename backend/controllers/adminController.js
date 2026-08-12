@@ -1,16 +1,50 @@
-// backend/controllers/adminController.js
 const asyncHandler = require('../utils/asyncHandler');
-const { notImplemented } = require('../utils/response');
-// TODO: const Order = require('../models/Order');
-// TODO: const User = require('../models/User');
-// TODO: const MenuItem = require('../models/MenuItem');
+const { success } = require('../utils/response');
+const Order = require('../models/Order');
+const User = require('../models/User');
+const MenuItem = require('../models/MenuItem');
 
-// GET /api/admin/stats (admin)
-// TODO: Aggregate: total revenue (sum totalAmount where paymentStatus='paid'),
-// total orders count, total users count, top-selling menu items (aggregate on Order.items),
-// orders grouped by orderStatus for a dashboard chart.
-const getStats = asyncHandler(async (req, res) => {
-  return notImplemented(res, 'Admin dashboard stats');
+const getStats = asyncHandler(async (_req, res) => {
+  const [revenueResult, totalOrders, totalUsers, totalMenuItems, statusRows, topItems] = await Promise.all([
+    Order.aggregate([
+      { $match: { paymentStatus: 'paid' } },
+      { $group: { _id: null, revenue: { $sum: '$totalAmount' } } },
+    ]),
+    Order.countDocuments(),
+    User.countDocuments(),
+    MenuItem.countDocuments(),
+    Order.aggregate([
+      { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    Order.aggregate([
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.item',
+          name: { $first: '$items.name' },
+          quantity: { $sum: '$items.quantity' },
+          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+        },
+      },
+      { $sort: { quantity: -1 } },
+      { $limit: 10 },
+    ]),
+  ]);
+
+  const ordersByStatus = statusRows.reduce((acc, row) => {
+    acc[row._id] = row.count;
+    return acc;
+  }, {});
+
+  return success(res, 200, {
+    totalRevenue: revenueResult[0]?.revenue || 0,
+    totalOrders,
+    totalUsers,
+    totalMenuItems,
+    ordersByStatus,
+    topSellingItems: topItems,
+  }, 'Admin statistics retrieved');
 });
 
 module.exports = { getStats };
