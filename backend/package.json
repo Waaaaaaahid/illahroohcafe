@@ -1,7 +1,7 @@
 {
   "name": "cafe-ordering-backend",
   "version": "1.0.0",
-  "description": "Backend skeleton for cafe ordering platform (Express + Mongoose) - NOT connected to a live database yet.",
+  "description": "Production Express + Mongoose API for Ilarooh Cafe",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
