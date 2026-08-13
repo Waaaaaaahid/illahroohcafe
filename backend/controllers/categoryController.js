@@ -1,17 +1,17 @@
 // backend/controllers/categoryController.js
 const asyncHandler = require('../utils/asyncHandler');
 const Category = require('../models/Category');
-const { notImplemented, success, error } = require('../utils/response');
+const { success, error } = require('../utils/response');
 
 // GET /api/categories
 const getCategories = asyncHandler(async (req, res) => {
-  const categories = await Category.find({ active: true }).sort('name');
+  const categories = await Category.find({ active: true }).sort({ sortOrder: 1, name: 1 });
   return success(res, 200, categories);
 });
 
 // POST /api/categories (admin)
 const createCategory = asyncHandler(async (req, res) => {
-  const { name, description, image, active } = req.body;
+  const { name, description, image, active, sortOrder } = req.body;
   const slug = String(req.body.slug || name)
     .toLowerCase()
     .trim()
@@ -29,6 +29,7 @@ const createCategory = asyncHandler(async (req, res) => {
     description,
     image,
     active: active !== undefined ? active : true,
+    sortOrder: sortOrder !== undefined ? sortOrder : 0,
   });
   return success(res, 201, category, 'Category created');
 });
