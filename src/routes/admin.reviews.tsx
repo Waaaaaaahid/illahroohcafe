@@ -1,0 +1,16 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff, Trash2, Star } from "lucide-react";
+import { Button } from "@/components/ui/AppButton";
+import { EmptyState, ErrorState, TableSkeleton } from "@/components/Loading/Loading";
+import { useToast } from "@/context/ToastContext";
+import { reviewService, type Review } from "@/services/reviewService";
+
+export const Route = createFileRoute("/admin/reviews")({ head: () => ({ meta: [{ title: "Reviews — Ilarooh Admin" }] }), component: AdminReviews });
+
+function AdminReviews() {
+  const qc = useQueryClient(); const { notify } = useToast(); const query = useQuery({ queryKey: ["admin-reviews"], queryFn: reviewService.listAdmin });
+  const visibility = useMutation({ mutationFn: (input: { id: string; visible: boolean }) => reviewService.setVisibility(input.id, input.visible), onSuccess: () => { void qc.invalidateQueries({ queryKey: ["admin-reviews"] }); notify("Review visibility updated", { variant: "success" }); }, onError: () => notify("Couldn't update review", { variant: "error" }) });
+  const remove = useMutation({ mutationFn: reviewService.remove, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["admin-reviews"] }); notify("Review deleted", { variant: "success" }); }, onError: () => notify("Couldn't delete review", { variant: "error" }) });
+  return <div className="space-y-6"><div><p className="eyebrow text-accent">Customer feedback</p><h1 className="mt-1 text-3xl font-semibold">Reviews</h1><p className="mt-2 text-sm text-muted-foreground">Moderate ratings and reviews shown on menu items.</p></div>{query.isLoading ? <TableSkeleton /> : query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : (query.data ?? []).length === 0 ? <EmptyState title="No reviews yet" description="Customer reviews will appear here after completed orders." /> : <div className="space-y-3">{(query.data ?? []).map((review: Review) => { const item = typeof review.item === "string" ? review.item : review.item.name; return <article key={review._id} className="rounded-3xl border border-border bg-card p-5 shadow-soft"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="font-semibold">{item}</p><p className="mt-1 text-xs text-muted-foreground">{review.user.name} · {typeof review.order === "string" ? review.order : review.order.code}</p><div className="mt-2 flex items-center gap-1 text-accent">{[1,2,3,4,5].map((n) => <Star key={n} className={`size-4 ${n <= review.rating ? "fill-accent" : ""}`} />)}</div></div><div className="flex gap-2"><Button variant="outline" size="icon" onClick={() => visibility.mutate({ id: review._id, visible: !review.visible })}>{review.visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}</Button><Button variant="destructive" size="icon" onClick={() => remove.mutate(review._id)}><Trash2 className="size-4" /></Button></div></div>{review.comment ? <p className="mt-4 text-sm text-muted-foreground">“{review.comment}”</p> : null}<span className={`mt-4 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${review.visible ? "bg-success/10 text-success" : "bg-secondary text-muted-foreground"}`}>{review.visible ? "Visible" : "Hidden"}</span></article>; })}</div>}</div>;
+}
