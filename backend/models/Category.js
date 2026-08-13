@@ -8,6 +8,7 @@ const categorySchema = new mongoose.Schema(
     description: { type: String, trim: true },
     image: { type: String },
     active: { type: Boolean, default: true },
+    sortOrder: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
