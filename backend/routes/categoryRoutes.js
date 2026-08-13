@@ -10,6 +10,10 @@ router
   .get(categoryController.getCategories)
   .post(protect, admin, categoryController.createCategory);
 
+// Admin needs inactive categories too so toggling OFF hides them from customers
+// without removing them from the admin panel.
+router.get('/admin', protect, admin, categoryController.getAdminCategories);
+
 router
   .route('/:id')
   .put(protect, admin, categoryController.updateCategory)
