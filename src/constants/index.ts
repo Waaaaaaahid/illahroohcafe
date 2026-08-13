@@ -14,6 +14,8 @@ export const ADMIN_LINKS = [
   { label: "Menu", to: "/admin/menu" },
   { label: "Categories", to: "/admin/categories" },
   { label: "Orders", to: "/admin/orders" },
+  { label: "Coupons", to: "/admin/coupons" },
+  { label: "Reviews", to: "/admin/reviews" },
   { label: "Users", to: "/admin/users" },
   { label: "Payments", to: "/admin/payments" },
   { label: "Cafe Settings", to: "/admin/settings" },
@@ -28,17 +30,11 @@ export const SORT_OPTIONS = [
 
 export type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 
-export const ORDER_STATUS_FLOW: OrderStatus[] = [
-  "Pending",
-  "Confirmed",
-  "Preparing",
-  "Ready",
-  "Out for Delivery",
-  "Completed",
-];
+export const ORDER_STATUS_FLOW: OrderStatus[] = ["Pending", "Confirmed", "Preparing", "Ready", "Out for Delivery", "Completed"];
 
 export const STORAGE_KEYS = {
   cart: "cafe.cart.v1",
   session: "cafe.session.v1",
   lastOrder: "cafe.lastOrder.v1",
+  coupon: "cafe.coupon.v1",
 } as const;
