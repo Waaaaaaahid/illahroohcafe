@@ -2,8 +2,10 @@
 // Vercel serverless entry — the whole Express app runs as one function.
 const app = require('../server');
 const connectDB = require('../config/db');
+const ensureMenuSeeded = require('../scripts/ensureMenuSeeded');
 
 let dbReady = null;
+let menuReady = null;
 
 module.exports = async (req, res) => {
   try {
@@ -11,6 +13,14 @@ module.exports = async (req, res) => {
       dbReady = connectDB();
     }
     await dbReady;
+
+    if (!menuReady) {
+      menuReady = ensureMenuSeeded().catch((error) => {
+        menuReady = null;
+        throw error;
+      });
+    }
+    await menuReady;
 
     return app(req, res);
   } catch (error) {
