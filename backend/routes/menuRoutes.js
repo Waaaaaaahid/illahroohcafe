@@ -1,13 +1,28 @@
 const express = require('express');
 const multer = require('multer');
+const path = require('path');
 const router = express.Router();
 const menuController = require('../controllers/menuController');
 const { protect } = require('../middleware/authMiddleware');
 const { admin } = require('../middleware/adminMiddleware');
 const { validate, menuItemRules } = require('../middleware/validationMiddleware');
-const { buildUploader } = require('../services/uploadService');
+const { buildUploader, isCloudinaryConfigured } = require('../services/uploadService');
 
-const upload = buildUploader('illahroohcafe/menu');
+// Cloudinary-backed storage when configured; in-memory otherwise (returns a
+// clear 503 error so clients know image hosting isn't enabled).
+const storage = isCloudinaryConfigured()
+  ? buildUploader('cafe-menu').storage
+  : multer.memoryStorage();
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    cb(null, allowed.includes(ext));
+  },
+});
 
 router
   .route('/')
@@ -19,7 +34,15 @@ router.post('/upload', protect, admin, upload.single('image'), (req, res) => {
     return res.status(400).json({ success: false, message: 'No image file provided' });
   }
 
-  return res.status(200).json({
+  if (!isCloudinaryConfigured()) {
+    return res.status(503).json({
+      success: false,
+      message:
+        'Image storage is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET to enable menu image uploads.',
+    });
+  }
+
+  return res.json({
     success: true,
     message: 'Image uploaded successfully',
     url: req.file.path,

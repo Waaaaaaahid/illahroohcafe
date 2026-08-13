@@ -10,6 +10,9 @@ const {
   verifyWebhookSignature,
 } = require('../services/paymentService');
 
+const isRazorpayConfigured = () =>
+  Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+
 const getAuthenticatedUser = async (req) => {
   const header = req.headers.authorization || '';
   if (!header.startsWith('Bearer ')) return null;
@@ -23,11 +26,21 @@ const getAuthenticatedUser = async (req) => {
   }
 };
 
+// POST /api/payment/create-order
+// Creates a Razorpay order and records it as a Payment doc (status 'created').
 const createPaymentOrder = asyncHandler(async (req, res) => {
   const user = await getAuthenticatedUser(req);
   if (!user) return error(res, 401, 'Login required for online payment');
 
-  const { orderId } = req.body;
+  if (!isRazorpayConfigured()) {
+    return error(
+      res,
+      503,
+      'Razorpay is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to enable online payments.',
+    );
+  }
+
+  const { orderId, amount } = req.body || {};
   const order = await Order.findById(orderId);
   if (!order) return error(res, 404, 'Order not found');
   if (String(order.user) !== String(user._id) && user.role !== 'admin') {
@@ -38,112 +51,158 @@ const createPaymentOrder = asyncHandler(async (req, res) => {
   }
   if (order.paymentStatus === 'paid') return error(res, 400, 'Order is already paid');
 
-  const amount = Number(order.totalAmount);
-  if (!Number.isFinite(amount) || amount <= 0) return error(res, 400, 'Invalid order amount');
+  const orderAmount = Number(order.totalAmount);
+  const requestedAmount = amount === undefined ? orderAmount : Number(amount);
+  if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+    return error(res, 400, 'Invalid order amount');
+  }
 
-  const razorpayOrder = await createRazorpayOrder({
-    amount,
-    currency: 'INR',
-    receipt: String(order._id),
-  });
+  let razorpayOrder;
+  try {
+    razorpayOrder = await createRazorpayOrder({
+      amount: requestedAmount,
+      currency: order.currency || 'INR',
+      receipt: `order_${order.code || order._id}`,
+    });
+  } catch (err) {
+    console.error('Razorpay order creation failed:', err.message);
+    return error(res, 502, 'Payment gateway could not create the order. Please try again.');
+  }
 
-  await Payment.findOneAndUpdate(
+  const payment = await Payment.findOneAndUpdate(
     { order: order._id },
     {
       order: order._id,
       user: order.user,
       razorpayOrderId: razorpayOrder.id,
-      amount,
-      currency: 'INR',
+      amount: razorpayOrder.amount / 100,
+      currency: razorpayOrder.currency || 'INR',
       status: 'created',
       paymentMethod: 'online',
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  return success(res, 200, {
-    razorpayOrderId: razorpayOrder.id,
-    amount: razorpayOrder.amount,
-    currency: razorpayOrder.currency,
-  }, 'Payment order created');
+  return success(
+    res,
+    200,
+    {
+      razorpayOrderId: payment.razorpayOrderId,
+      amount: payment.amount,
+      currency: payment.currency,
+      paymentId: payment._id,
+    },
+    'Payment order created'
+  );
 });
 
+// POST /api/payment/verify
+// Verifies the Razorpay checkout signature and marks payment + order as paid.
 const verifyPayment = asyncHandler(async (req, res) => {
   const user = await getAuthenticatedUser(req);
   if (!user) return error(res, 401, 'Login required for payment verification');
 
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body || {};
   if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-    return error(res, 400, 'Incomplete payment verification data');
+    return error(res, 400, 'razorpayOrderId, razorpayPaymentId and razorpaySignature are required');
   }
 
-  const payment = await Payment.findOne({ razorpayOrderId }).populate('order');
-  if (!payment) return error(res, 404, 'Payment record not found');
+  const payment = await Payment.findOne({ razorpayOrderId });
+  if (!payment) return error(res, 404, 'Payment not found');
   if (String(payment.user) !== String(user._id) && user.role !== 'admin') {
     return error(res, 403, 'Not authorized for this payment');
   }
 
   const verified = verifyPaymentSignature({ razorpayOrderId, razorpayPaymentId, razorpaySignature });
   if (!verified) {
-    await Payment.updateOne({ _id: payment._id }, { status: 'failed', razorpayPaymentId, razorpaySignature });
+    await Payment.updateOne(
+      { _id: payment._id },
+      { status: 'failed', razorpayPaymentId, razorpaySignature }
+    );
     return error(res, 400, 'Invalid payment signature');
   }
 
-  await Payment.updateOne({ _id: payment._id }, { status: 'paid', razorpayPaymentId, razorpaySignature });
-  await Order.updateOne({ _id: payment.order._id }, { paymentStatus: 'paid' });
+  await Payment.updateOne(
+    { _id: payment._id },
+    { status: 'paid', razorpayPaymentId, razorpaySignature }
+  );
+  await Order.updateOne({ _id: payment.order }, { paymentStatus: 'paid' });
 
   return success(res, 200, { verified: true }, 'Payment verified');
 });
 
+// POST /api/payment/webhook
+// Razorpay server-to-server events (payment.captured / payment.failed).
+// req.body is the RAW body buffer (mounted with express.raw in server.js).
 const handleWebhook = asyncHandler(async (req, res) => {
-  const signature = req.headers['x-razorpay-signature'];
-  if (!signature || !process.env.RAZORPAY_WEBHOOK_SECRET) {
-    return error(res, 400, 'Webhook signature configuration is missing');
+  if (!process.env.RAZORPAY_WEBHOOK_SECRET) {
+    return res.status(503).json({ success: false, message: 'Razorpay webhook secret is not configured' });
   }
 
+  const signature = req.headers['x-razorpay-signature'];
   const rawBody = Buffer.isBuffer(req.body)
     ? req.body
     : Buffer.from(JSON.stringify(req.body || {}));
 
-  if (!verifyWebhookSignature(rawBody, signature)) {
-    return error(res, 400, 'Invalid webhook signature');
+  if (!signature || !verifyWebhookSignature(rawBody, signature)) {
+    return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
   }
 
-  const payload = JSON.parse(rawBody.toString('utf8'));
-  const event = payload.event;
-  const entity = payload.payload?.payment?.entity;
+  let payload;
+  try {
+    payload = JSON.parse(rawBody.toString('utf8'));
+  } catch {
+    return res.status(400).json({ success: false, message: 'Invalid webhook payload' });
+  }
+
+  const event = payload?.event;
+  const entity = payload?.payload?.payment?.entity;
   const razorpayOrderId = entity?.order_id;
 
-  if (razorpayOrderId) {
-    const status = event === 'payment.captured' || event === 'payment.authorized'
+  if (!razorpayOrderId) {
+    console.warn('Webhook event without order_id:', event);
+    return res.status(200).json({ success: true });
+  }
+
+  const status =
+    event === 'payment.captured' || event === 'payment.authorized'
       ? 'paid'
       : event === 'payment.failed'
         ? 'failed'
         : null;
 
-    if (status) {
-      const payment = await Payment.findOneAndUpdate(
-        { razorpayOrderId },
-        { status, razorpayPaymentId: entity.id },
-        { new: true }
-      );
+  if (status) {
+    const payment = await Payment.findOneAndUpdate(
+      { razorpayOrderId },
+      { status, razorpayPaymentId: entity.id },
+      { new: true }
+    );
 
-      if (payment) {
-        await Order.updateOne({ _id: payment.order }, { paymentStatus: status });
-      }
+    if (payment) {
+      await Order.updateOne({ _id: payment.order }, { paymentStatus: status });
     }
   }
 
   return res.status(200).json({ success: true });
 });
 
+// GET /api/payment (admin)
 const getPayments = asyncHandler(async (_req, res) => {
   const payments = await Payment.find()
-    .populate('order', 'code totalAmount orderStatus')
-    .populate('user', 'name email phone')
-    .sort('-createdAt');
+    .populate('order', 'code')
+    .populate('user', 'name email')
+    .sort('-createdAt')
+    .limit(100);
 
-  return success(res, 200, payments, 'Payments retrieved');
+  // Keep the frontend payload flat: order -> its human-readable code.
+  const serialized = payments.map((payment) => {
+    const data = payment.toObject();
+    data.order = data.order?.code || data.order?._id || data.order;
+    data.user = data.user?._id || data.user;
+    return data;
+  });
+
+  return success(res, 200, serialized);
 });
 
 module.exports = { createPaymentOrder, verifyPayment, handleWebhook, getPayments };

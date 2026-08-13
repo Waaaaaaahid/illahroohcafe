@@ -11,13 +11,10 @@ function getDefaultApiUrl() {
   // This avoids browser CORS/port forwarding problems entirely.
   if (import.meta.env.DEV) return "/api";
 
-  return "";
+  return "/api";
 }
 
 export const API_BASE_URL = getDefaultApiUrl();
-
-export const USE_MOCK_API =
-  (import.meta.env["VITE_USE_MOCK_API"] as string | undefined) === "true";
 
 export class ApiError extends Error {
   status: number;
@@ -60,7 +57,7 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, auth = true, headers, ...rest } = options;
 
-  if (!USE_MOCK_API && !API_BASE_URL) {
+  if (!API_BASE_URL) {
     throw new ApiError("VITE_API_URL is not configured for this deployment", 500);
   }
 

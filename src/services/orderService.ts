@@ -1,10 +1,8 @@
 import {
   api,
-  USE_MOCK_API,
   API_BASE_URL,
   getStoredSession,
 } from "@/services/api";
-import { mockApi } from "@/lib/mock/mockApi";
 import type {
   CustomerDetails,
   Order,
@@ -30,37 +28,25 @@ type OrderEvent = {
 
 export const orderService = {
   create: (input: CreateOrderInput) =>
-    USE_MOCK_API
-      ? mockApi.createOrder(input)
-      : api.post<Order>("/orders", input),
+    api.post<Order>("/orders", input),
 
   listMine: (userId: string) =>
-    USE_MOCK_API
-      ? mockApi.listMyOrders(userId)
-      : api.get<Order[]>("/orders/my"),
+    api.get<Order[]>("/orders/my"),
 
   listAll: () =>
-    USE_MOCK_API
-      ? mockApi.listOrders()
-      : api.get<Order[]>("/orders"),
+    api.get<Order[]>("/orders"),
 
   get: (orderId: string) =>
-    USE_MOCK_API
-      ? mockApi.getOrder(orderId)
-      : api.get<Order>(`/orders/${orderId}`),
+    api.get<Order>(`/orders/${orderId}`),
 
   updateStatus: (orderId: string, orderStatus: OrderStatus) =>
-    USE_MOCK_API
-      ? mockApi.updateOrderStatus(orderId, orderStatus)
-      : api.put<Order>(`/orders/${orderId}/status`, { orderStatus }),
+    api.put<Order>(`/orders/${orderId}/status`, { orderStatus }),
 
   // Customer realtime order updates
   subscribeOrder: (
     orderId: string,
     onOrder: (order: Order) => void
   ): (() => void) => {
-    if (USE_MOCK_API) return () => {};
-
     let closed = false;
     let controller: AbortController | undefined;
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -159,8 +145,6 @@ export const orderService = {
   subscribeAdminOrders: (
     onEvent: (event: OrderEvent) => void
   ): (() => void) => {
-    if (USE_MOCK_API) return () => {};
-
     let closed = false;
     let controller: AbortController | undefined;
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;

@@ -5,12 +5,11 @@ import { ClipboardList, IndianRupee, ShoppingBag, UsersRound, UtensilsCrossed } 
 import { orderService } from "@/services/orderService";
 import { menuService } from "@/services/menuService";
 import { adminService } from "@/services/adminService";
-import { mockRevenueSeries } from "@/lib/mock/mockData";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import { StatCard } from "@/components/admin/StatCard";
 import { OrderStatusPill } from "@/components/admin/StatusPill";
 import { ErrorState, Skeleton, TableSkeleton } from "@/components/Loading/Loading";
-import { ORDER_STATUSES } from "@/lib/types";
+import { ORDER_STATUSES, type Order } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -32,6 +31,32 @@ function isToday(dateString: string) {
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate()
   );
+}
+
+function isSameDay(dateString: string, day: Date) {
+  const date = new Date(dateString);
+  return (
+    date.getFullYear() === day.getFullYear() &&
+    date.getMonth() === day.getMonth() &&
+    date.getDate() === day.getDate()
+  );
+}
+
+/** Paid revenue per day for the last 7 days, computed from real orders. */
+function buildRevenueSeries(orders: Order[]) {
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() - (6 - index));
+    return day;
+  });
+
+  return days.map((day) => ({
+    label: day.toLocaleDateString(undefined, { weekday: "short" }),
+    revenue: orders
+      .filter((order) => order.paymentStatus === "paid" && isSameDay(order.createdAt, day))
+      .reduce((sum, order) => sum + order.totalAmount, 0),
+  }));
 }
 
 function AdminDashboard() {
@@ -89,6 +114,8 @@ function AdminDashboard() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 6);
 
+  const revenueSeries = buildRevenueSeries(orders);
+
   return (
     <div className="space-y-8">
       <div>
@@ -110,10 +137,10 @@ function AdminDashboard() {
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="rounded-3xl border border-border bg-card p-5 shadow-soft xl:col-span-2">
           <h2 className="text-lg font-semibold text-foreground">Weekly revenue</h2>
-          <p className="text-xs text-muted-foreground">Demo trend from recent activity</p>
+          <p className="text-xs text-muted-foreground">Paid revenue over the last 7 days</p>
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockRevenueSeries}>
+              <AreaChart data={revenueSeries}>
                 <defs>
                   <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.45} />

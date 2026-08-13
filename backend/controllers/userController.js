@@ -2,12 +2,15 @@ const asyncHandler = require('../utils/asyncHandler');
 const { success, error } = require('../utils/response');
 const User = require('../models/User');
 
+// GET /api/users/profile (protected)
 const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select('-password');
   if (!user) return error(res, 404, 'User not found');
   return success(res, 200, user, 'Profile retrieved');
 });
 
+// PUT /api/users/profile (protected)
+// Allows updating name/phone/email and optionally the password (pre-save hook re-hashes it).
 const updateProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select('+password');
   if (!user) return error(res, 404, 'User not found');
@@ -33,6 +36,7 @@ const updateProfile = asyncHandler(async (req, res) => {
   }
 
   await user.save();
+
   const data = user.toObject();
   delete data.password;
 

@@ -1,22 +1,24 @@
-const app = require("../server");
-const connectDB = require("../config/db");
+// backend/api/index.js
+// Vercel serverless entry — the whole Express app runs as one function.
+const app = require('../server');
+const connectDB = require('../config/db');
 
-let dbConnected = false;
+let dbReady = null;
 
 module.exports = async (req, res) => {
   try {
-    if (!dbConnected) {
-      await connectDB();
-      dbConnected = true;
+    if (!dbReady) {
+      dbReady = connectDB();
     }
+    await dbReady;
 
     return app(req, res);
   } catch (error) {
-    console.error("Backend startup error:", error);
+    console.error('Backend startup error:', error);
 
     return res.status(500).json({
       success: false,
-      message: "Backend failed to start",
+      message: 'Backend failed to start',
       error: error.message,
     });
   }

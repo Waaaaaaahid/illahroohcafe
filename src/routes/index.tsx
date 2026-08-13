@@ -1,13 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowRight, ChefHat, Leaf, MapPin, Sparkles, Star, Timer } from "lucide-react";
+import { ArrowRight, ChefHat, Leaf, Sparkles, Star, Timer } from "lucide-react";
 import { Hero } from "@/components/Hero/Hero";
 import { MenuCard } from "@/components/MenuCard/MenuCard";
 import { MenuGridSkeleton, ErrorState } from "@/components/Loading/Loading";
 import { Button } from "@/components/ui/AppButton";
 import { menuService } from "@/services/menuService";
-import { mockReviews } from "@/lib/mock/mockData";
 import { useCafe } from "@/context/CafeContext";
 
 export const Route = createFileRoute("/")({
@@ -34,6 +33,12 @@ const WHY_US = [
   { title: "Fast Service", description: "Average delivery in 25 minutes across the neighbourhood.", icon: Timer },
   { title: "Premium Taste", description: "Recipes developed by chefs with fine-dining pedigree.", icon: Sparkles },
   { title: "Hygienic Kitchen", description: "FSSAI certified, audited every quarter.", icon: ChefHat },
+];
+
+const REVIEWS = [
+  { id: "r1", name: "Meera Raghavan", role: "Regular since 2023", rating: 5, text: "The pour over here ruined every other coffee for me. The room smells like roasted cocoa at 8am." },
+  { id: "r2", name: "Daniel Alvarez", role: "Food writer", rating: 5, text: "Truffle tagliatelle that would hold its own in a fine-dining room, served in a cafe with worn oak tables." },
+  { id: "r3", name: "Priya Nair", role: "Designer", rating: 4, text: "I work here three mornings a week. Fast delivery too — my order arrives still steaming." },
 ];
 
 function HomePage() {
@@ -187,7 +192,7 @@ function HomePage() {
       <section className="container-page section-padding">
         <SectionHeading eyebrow="Guest book" title="What people say" />
         <div className="grid gap-6 md:grid-cols-3">
-          {mockReviews.map((review, index) => (
+          {REVIEWS.map((review, index) => (
             <motion.figure
               key={review.id}
               initial={{ opacity: 0, y: 22 }}
@@ -237,14 +242,14 @@ function HomePage() {
             </div>
           </div>
           <div className="relative min-h-64 bg-secondary">
-            {/* Map placeholder — swap for an embedded map when the API key is added. */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
-              <MapPin className="size-8 text-accent" />
-              <p className="text-sm font-semibold">Map placeholder</p>
-              <p className="max-w-xs text-xs text-muted-foreground">
-                Drop an embedded map here once your maps provider key is configured.
-              </p>
-            </div>
+            <iframe
+              title="Ilarooh location map"
+              src="https://www.google.com/maps?q=28.562712,77.290247&z=16&output=embed"
+              className="absolute inset-0 size-full border-0"
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
         </div>
       </section>

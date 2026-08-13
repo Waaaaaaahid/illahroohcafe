@@ -9,11 +9,11 @@ import { useCafe } from "@/context/CafeContext";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { orderService } from "@/services/orderService";
-import { paymentService } from "@/services/paymentService";
+import { paymentService, RAZORPAY_KEY_ID } from "@/services/paymentService";
 import { formatCurrency } from "@/utils/format";
 import { validateCheckout, type CheckoutForm, type FieldErrors } from "@/utils/validators";
 import { STORAGE_KEYS } from "@/constants";
-import type { PaymentMethod } from "@/lib/types";
+import type { Order, PaymentMethod } from "@/lib/types";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -85,25 +85,24 @@ function CheckoutPage() {
         paymentMethod: method,
       });
 
+      let paymentSettled = method === "cod";
       if (method === "online") {
-        // Razorpay-ready: the server creates the order and verifies the signature.
-        // The order is already recorded; a missing gateway must not fail checkout.
-        try {
-          await paymentService.createRazorpayOrder({ orderId: order._id, amount: total });
-        } catch (error) {
-          notify("Payment gateway not connected yet", {
-            description:
-              "Your order is confirmed — add your Razorpay keys to take live payments.",
-            variant: "info",
-          });
-        }
+        paymentSettled = await runRazorpayCheckout(order);
       }
 
       if (typeof window !== "undefined") {
         window.localStorage.setItem(STORAGE_KEYS.lastOrder, order._id);
       }
       clearCart();
-      notify("Order placed successfully", { description: `Reference ${order.code}`, variant: "success" });
+      if (method === "online" && !paymentSettled) {
+        notify("Order placed — payment pending", {
+          description:
+            "Your order is confirmed with cash on delivery as the fallback. Pay on delivery if online payment wasn't completed.",
+          variant: "info",
+        });
+      } else {
+        notify("Order placed successfully", { description: `Reference ${order.code}`, variant: "success" });
+      }
       await navigate({ to: "/order-success", search: { orderId: order._id } });
     } catch (error) {
       notify("We couldn't place your order", {
@@ -232,11 +231,11 @@ function CheckoutPage() {
                 description="Card, UPI or wallet via Razorpay."
               />
             </div>
-            {method === "online" ? (
+            {method === "online" && !RAZORPAY_KEY_ID ? (
               <p className="mt-4 rounded-2xl bg-secondary p-4 text-xs text-muted-foreground">
-                Razorpay is architecturally wired but not connected. Add your keys to
-                <code className="mx-1 rounded bg-card px-1.5 py-0.5">backend/.env</code>
-                and the live checkout takes over with no UI change.
+                Razorpay isn't configured yet — your order will be placed with payment due on
+                delivery. Add <code className="mx-1 rounded bg-card px-1.5 py-0.5">VITE_RAZORPAY_KEY_ID</code>{" "}
+                to accept card/UPI payments.
               </p>
             ) : null}
           </section>
@@ -322,4 +321,103 @@ function PaymentOption({
       </span>
     </button>
   );
+}
+
+/**
+ * Runs the live Razorpay checkout flow for an online order.
+ * Returns true when the payment was captured and verified, false when the
+ * user cancelled or the gateway wasn't reachable (order stays + payment due on delivery).
+ */
+async function runRazorpayCheckout(order: Order): Promise<boolean> {
+  if (!RAZORPAY_KEY_ID) return false;
+
+  const result = await openRazorpayCheckout(order);
+  if (!result) return false;
+
+  // The server verifies the HMAC signature and marks the order paid.
+  await paymentService.verify({
+    razorpayOrderId: result.razorpayOrderId,
+    razorpayPaymentId: result.response.razorpay_payment_id,
+    razorpaySignature: result.response.razorpay_signature,
+  });
+  return true;
+}
+
+interface RazorpayPaymentResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayCheckout {
+  open: () => void;
+  on: (event: string, callback: (response: RazorpayPaymentResponse) => void) => void;
+}
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => RazorpayCheckout;
+  }
+}
+
+/** Loads the Razorpay checkout script once and opens the payment modal. */
+async function openRazorpayCheckout(
+  order: Order,
+): Promise<{ razorpayOrderId: string; response: RazorpayPaymentResponse } | null> {
+  if (typeof window === "undefined") return null;
+
+  if (!window.Razorpay) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+        if (existing) {
+          existing.addEventListener("load", () => resolve());
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("Could not load the payment gateway"));
+        document.head.appendChild(script);
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  let razorpayOrderId: string;
+  let amount: number;
+  try {
+    const created = await paymentService.createRazorpayOrder({
+      orderId: order._id,
+      amount: order.totalAmount,
+    });
+    razorpayOrderId = created.razorpayOrderId;
+    amount = created.amount;
+  } catch {
+    // Gateway not reachable or not configured — order stays with payment due on delivery.
+    return null;
+  }
+
+  const response = await new Promise<RazorpayPaymentResponse | null>((resolve) => {
+    const checkout = new window.Razorpay!({
+      key: RAZORPAY_KEY_ID,
+      amount: Math.round(amount * 100),
+      currency: "INR",
+      name: "Ilarooh",
+      description: `Order ${order.code}`,
+      order_id: razorpayOrderId,
+      handler: (value: RazorpayPaymentResponse) => resolve(value),
+      modal: {
+        ondismiss: () => resolve(null),
+      },
+      theme: { color: "#B4531F" },
+    });
+    checkout.on("payment.failed", () => resolve(null));
+    checkout.open();
+  });
+
+  if (!response) return null;
+  return { razorpayOrderId, response };
 }

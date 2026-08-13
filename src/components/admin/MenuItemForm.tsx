@@ -5,6 +5,7 @@ import { Field, Select, TextArea, TextInput } from "@/components/ui/Field";
 import { Button } from "@/components/ui/AppButton";
 import { menuService } from "@/services/menuService";
 import { adminService } from "@/services/adminService";
+import { useToast } from "@/context/ToastContext";
 import type { MenuItem } from "@/lib/types";
 
 export interface MenuItemFormValues {
@@ -83,6 +84,7 @@ export function MenuItemForm({
   submitLabel: string;
 }) {
   const [uploading, setUploading] = useState(false);
+  const { notify } = useToast();
   const categoriesQuery = useQuery({ queryKey: ["admin-categories"], queryFn: menuService.categories });
 
   const set = <K extends keyof MenuItemFormValues>(key: K, value: MenuItemFormValues[K]) =>
@@ -94,6 +96,11 @@ export function MenuItemForm({
     try {
       const result = await adminService.uploadImage(file);
       set("image", result.url);
+    } catch (error) {
+      notify("Image upload failed", {
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "error",
+      });
     } finally {
       setUploading(false);
     }

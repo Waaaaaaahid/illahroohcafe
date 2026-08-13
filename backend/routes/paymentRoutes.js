@@ -7,9 +7,9 @@ const { admin } = require('../middleware/adminMiddleware');
 
 router.post('/create-order', paymentController.createPaymentOrder);
 router.post('/verify', paymentController.verifyPayment);
-// TODO: In server.js, mount this specific route with express.raw({type: 'application/json'})
-// BEFORE the global express.json() middleware, since Razorpay webhook signature
-// verification requires the raw request body.
+// NOTE: server.js mounts express.raw() for /api/payment/webhook BEFORE the
+// global express.json(), so req.body here is the raw Buffer used for
+// Razorpay signature verification.
 router.post('/webhook', paymentController.handleWebhook);
 router.get('/', protect, admin, paymentController.getPayments);
 

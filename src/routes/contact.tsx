@@ -122,14 +122,15 @@ function ContactPage() {
             title="Hours"
             lines={settings.openingHours.map((entry) => `${entry.day} · ${entry.hours}`)}
           />
-          <div className="flex min-h-56 items-center justify-center rounded-3xl border border-dashed border-border bg-secondary/50 text-center">
-            <div className="px-6">
-              <MapPin className="mx-auto size-7 text-accent" />
-              <p className="mt-3 text-sm font-semibold">Map placeholder</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Embed your maps provider here after adding its key.
-              </p>
-            </div>
+          <div className="overflow-hidden rounded-3xl border border-border bg-secondary/50">
+            <iframe
+              title="Ilarooh location map"
+              src="https://www.google.com/maps?q=28.562712,77.290247&z=16&output=embed"
+              className="h-56 w-full border-0"
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
         </aside>
       </div>

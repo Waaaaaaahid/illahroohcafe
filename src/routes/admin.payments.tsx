@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
-import { paymentService } from "@/services/paymentService";
+import { paymentService, RAZORPAY_KEY_ID } from "@/services/paymentService";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import { PaymentStatusPill } from "@/components/admin/StatusPill";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/Loading/Loading";
@@ -30,10 +30,16 @@ function AdminPayments() {
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">Payments</h1>
       </div>
 
-      <div className="flex items-start gap-3 rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-foreground">
-        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
-        <p>Razorpay is not yet connected. This ledger currently reflects mock/local payment records only.</p>
-      </div>
+      {!RAZORPAY_KEY_ID ? (
+        <div className="flex items-start gap-3 rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-foreground">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+          <p>
+            Razorpay isn't configured for this deployment yet — add{" "}
+            <code className="mx-1 rounded bg-card px-1.5 py-0.5">VITE_RAZORPAY_KEY_ID</code> to enable
+            online payments. Cash on delivery still works.
+          </p>
+        </div>
+      ) : null}
 
       {paymentsQuery.isLoading ? (
         <TableSkeleton rows={6} />

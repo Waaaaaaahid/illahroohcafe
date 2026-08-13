@@ -1,6 +1,5 @@
 /**
- * Shared domain types. These mirror the Mongoose schemas in /backend/models,
- * so switching from the mock layer to the real Express API needs no UI change.
+ * Shared domain types. These mirror the Mongoose schemas in /backend/models.
  */
 
 export type UserRole = "user" | "admin";

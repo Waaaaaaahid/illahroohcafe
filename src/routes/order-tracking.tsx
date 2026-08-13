@@ -118,7 +118,7 @@ const currentIndex = order && orderStatus ? ORDER_STATUS_FLOW.indexOf(orderStatu
                 className={`rounded-full px-4 py-1.5 text-xs font-semibold ${
                   order.orderStatus === "Cancelled"
                     ? "bg-destructive/10 text-destructive"
-                    : "bg-accent/12 text-accent"
+                    : statusBadgeColor[order.orderStatus]
                 }`}
               >
                 {order.orderStatus}
@@ -188,6 +188,15 @@ const currentIndex = order && orderStatus ? ORDER_STATUS_FLOW.indexOf(orderStatu
     </div>
   );
 }
+
+const statusBadgeColor: Record<string, string> = {
+  Pending: "bg-orange-500/10 text-orange-600",
+  Confirmed: "bg-blue-500/10 text-blue-600",
+  Preparing: "bg-amber-500/10 text-amber-600",
+  Ready: "bg-green-500/10 text-green-600",
+  "Out for Delivery": "bg-purple-500/10 text-purple-600",
+  Completed: "bg-emerald-700/10 text-emerald-700",
+};
 
 const statusCopy: Record<string, string> = {
   Pending: "We've received your order.",

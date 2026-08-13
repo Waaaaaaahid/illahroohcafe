@@ -93,9 +93,6 @@ function LoginPage() {
         <Button type="submit" size="lg" loading={loading} className="w-full">
           Sign in
         </Button>
-        <p className="text-center text-xs text-muted-foreground">
-          Demo preview: any password works. Use an email starting with “admin” for admin access.
-        </p>
       </form>
     </AuthLayout>
   );
