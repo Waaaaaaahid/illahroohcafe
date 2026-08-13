@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Check, PackageSearch, Truck } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, PackageCheck, PackageSearch, Truck } from "lucide-react";
 import { Button } from "@/components/ui/AppButton";
 import { Field, TextInput } from "@/components/ui/Field";
 import { EmptyState, ErrorState, Skeleton } from "@/components/Loading/Loading";
@@ -129,6 +130,8 @@ const currentIndex = order && orderStatus ? ORDER_STATUS_FLOW.indexOf(orderStatu
               <p className="mt-8 rounded-2xl bg-destructive/8 p-5 text-sm text-muted-foreground">
                 This order was cancelled. If that's unexpected, call {settings.phone}.
               </p>
+            ) : order.orderStatus === "Completed" ? (
+              <DeliveredCelebration />
             ) : (
               <ol className="mt-9 space-y-0">
                 {ORDER_STATUS_FLOW.map((status, index) => {
@@ -198,6 +201,120 @@ const statusBadgeColor: Record<string, string> = {
   Completed: "bg-emerald-700/10 text-emerald-700",
 };
 
+const CONFETTI_COLORS = [
+  "bg-amber-400/90",
+  "bg-emerald-500/90",
+  "bg-orange-400/90",
+  "bg-purple-400/90",
+  "bg-rose-300/90",
+  "bg-success",
+];
+
+// Deterministic particle field (module-level, so the burst is stable across re-renders).
+const CONFETTI_PARTICLES = Array.from({ length: 16 }, (_, i) => {
+  const angle = (i / 16) * Math.PI * 2 + (i % 2 ? 0.35 : -0.25);
+  const radius = 76 + ((i * 37) % 44);
+  return {
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius,
+    rotation: (i * 53) % 160 - 80,
+    delay: 0.12 + ((i * 13) % 11) * 0.05,
+    size: 4 + ((i * 7) % 5),
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    round: i % 3 !== 0,
+  };
+});
+
+function DeliveredCelebration() {
+  return (
+    <div className="mt-10 flex flex-col items-center text-center">
+      <div className="relative flex size-24 items-center justify-center">
+        {[0, 1].map((ring) => (
+          <motion.span
+            key={ring}
+            className="absolute inset-0 rounded-full border-2 border-success/30"
+            initial={{ scale: 0.4, opacity: 0.7 }}
+            animate={{ scale: 1.6, opacity: 0 }}
+            transition={{
+              duration: 2.4,
+              delay: ring * 0.9,
+              repeat: Infinity,
+              repeatDelay: 0.6,
+              ease: "easeOut",
+            }}
+          />
+        ))}
+        <motion.span
+          initial={{ scale: 0.4, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 280, damping: 16 }}
+          className="relative flex size-20 items-center justify-center rounded-full bg-success/12 text-success shadow-glow"
+        >
+          <motion.span
+            initial={{ scale: 0, rotate: -30 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 14, delay: 0.15 }}
+          >
+            <PackageCheck className="size-10" strokeWidth={1.75} />
+          </motion.span>
+        </motion.span>
+
+        {CONFETTI_PARTICLES.map((particle, index) => (
+          <motion.span
+            key={index}
+            className={`absolute left-1/2 top-1/2 ${
+              particle.round ? "rounded-full" : "rounded-[2px]"
+            } ${particle.color}`}
+            style={{
+              width: particle.size,
+              height: particle.round ? particle.size : particle.size * 1.6,
+            }}
+            initial={{ x: 0, y: 0, opacity: 0, scale: 0.2 }}
+            animate={{
+              x: particle.x,
+              y: particle.y,
+              opacity: [0, 1, 1, 0],
+              scale: 1,
+              rotate: particle.rotation,
+            }}
+            transition={{
+              duration: 1.4,
+              delay: 0.25 + particle.delay,
+              repeat: 3,
+              repeatDelay: 2.2,
+              ease: "easeOut",
+            }}
+          />
+        ))}
+      </div>
+
+      <motion.h2
+        initial={{ y: 12, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.35, duration: 0.5, ease: "easeOut" }}
+        className="mt-8 font-display text-3xl font-semibold"
+      >
+        Order Delivered!
+      </motion.h2>
+      <motion.p
+        initial={{ y: 12, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+        className="mt-3 max-w-md text-muted-foreground"
+      >
+        Your order has been delivered successfully.
+      </motion.p>
+      <motion.p
+        initial={{ y: 12, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.65, duration: 0.5, ease: "easeOut" }}
+        className="mt-2 font-display text-lg italic text-amber-700/80"
+      >
+        Thank you for ordering from Ilaah Rooh Café.
+      </motion.p>
+    </div>
+  );
+}
 const statusCopy: Record<string, string> = {
   Pending: "We've received your order.",
   Confirmed: "The kitchen has accepted your ticket.",
