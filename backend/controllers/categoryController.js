@@ -3,9 +3,15 @@ const asyncHandler = require('../utils/asyncHandler');
 const Category = require('../models/Category');
 const { success, error } = require('../utils/response');
 
-// GET /api/categories
+// GET /api/categories - public/customer categories only
 const getCategories = asyncHandler(async (req, res) => {
   const categories = await Category.find({ active: true }).sort({ sortOrder: 1, name: 1 });
+  return success(res, 200, categories);
+});
+
+// GET /api/categories/admin - all categories, including inactive (admin)
+const getAdminCategories = asyncHandler(async (req, res) => {
+  const categories = await Category.find({}).sort({ sortOrder: 1, name: 1 });
   return success(res, 200, categories);
 });
 
@@ -46,7 +52,7 @@ const updateCategory = asyncHandler(async (req, res) => {
   return success(res, 200, category, 'Category updated');
 });
 
-// DELETE /api/categories/:id (admin)
+// DELETE /api/categories/:id (admin) - permanent delete only when explicitly requested
 const deleteCategory = asyncHandler(async (req, res) => {
   const category = await Category.findByIdAndDelete(req.params.id);
   if (!category) {
@@ -55,4 +61,4 @@ const deleteCategory = asyncHandler(async (req, res) => {
   return success(res, 200, { _id: req.params.id }, 'Category deleted');
 });
 
-module.exports = { getCategories, createCategory, updateCategory, deleteCategory };
+module.exports = { getCategories, getAdminCategories, createCategory, updateCategory, deleteCategory };
