@@ -15,16 +15,14 @@ const getFeaturedReviews = asyncHandler(async (_req, res) => {
 });
 
 const createReview = asyncHandler(async (req, res) => {
-  const { orderId, itemId, rating, comment } = req.body;
-  if (!orderId || !itemId || !Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5) return error(res, 400, 'Order, item and a rating from 1 to 5 are required');
+  const { orderId, rating, comment } = req.body;
+  if (!orderId || !Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5) return error(res, 400, 'Order and a rating from 1 to 5 are required');
   if (!comment || !String(comment).trim()) return error(res, 400, 'Please write a review');
   const order = await Order.findOne({ _id: orderId, user: req.user.id, orderStatus: 'Completed' });
-  if (!order) return error(res, 400, 'You can review an item only after your order is completed');
-  const orderedItem = order.items.find((item) => String(item.item) === String(itemId));
-  if (!orderedItem) return error(res, 400, 'This item was not part of the order');
-  const existing = await Review.findOne({ user: req.user.id, item: itemId });
-  if (existing) return error(res, 409, 'You have already reviewed this item');
-  const review = await Review.create({ user: req.user.id, item: itemId, order: orderId, authorName: req.user.name || order.customerDetails.name, rating: Number(rating), comment: String(comment).trim(), source: 'customer', visible: false });
+  if (!order) return error(res, 400, 'You can review your order only after it is completed');
+  const existing = await Review.findOne({ user: req.user.id, order: orderId, source: 'customer' });
+  if (existing) return error(res, 409, 'You have already reviewed this order');
+  const review = await Review.create({ user: req.user.id, order: orderId, authorName: req.user.name || order.customerDetails.name, rating: Number(rating), comment: String(comment).trim(), source: 'customer', visible: false });
   return success(res, 201, review, 'Review submitted for approval');
 });
 
