@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/services/adminService";
 import { useToast } from "@/context/ToastContext";
 import { MenuItemForm, emptyMenuItemForm, type MenuItemFormValues } from "@/components/admin/MenuItemForm";
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/admin/menu/new")({
 function AdminMenuNew() {
   const [values, setValues] = useState<MenuItemFormValues>(emptyMenuItemForm);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { notify } = useToast();
 
   const createMutation = useMutation({
@@ -36,6 +37,9 @@ function AdminMenuNew() {
       }),
     onSuccess: () => {
       notify("Menu item created", { variant: "success" });
+      void queryClient.invalidateQueries({ queryKey: ["admin-menu"] });
+      void queryClient.invalidateQueries({ queryKey: ["menu"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
       void navigate({ to: "/admin/menu" });
     },
     onError: () => notify("Couldn't create menu item", { variant: "error" }),

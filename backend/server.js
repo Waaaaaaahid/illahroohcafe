@@ -63,6 +63,18 @@ if (allowedOrigins.length === 0) {
   );
 }
 
+// Development: trust the Vite/TanStack dev server on any loopback hostname
+// (localhost / 127.0.0.1 / [::1]) and common ports, so the admin UI works no
+// matter which address the browser opens. Production remains strict and only
+// accepts CLIENT_URL / FRONTEND_URL.
+if (!isProduction) {
+  for (const port of ['5173', '8080', '3000', '4173']) {
+    for (const host of ['localhost', '127.0.0.1', '[::1]']) {
+      allowedOrigins.push(`http://${host}:${port}`);
+    }
+  }
+}
+
 app.use(
   cors({
     origin(origin, callback) {

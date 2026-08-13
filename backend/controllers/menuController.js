@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const asyncHandler = require('../utils/asyncHandler');
 const MenuItem = require('../models/MenuItem');
 const Category = require('../models/Category');
+const { deleteCloudinaryImage } = require('../services/uploadService');
 const { notImplemented, success, error } = require('../utils/response');
 
 const toClientItem = (item) => ({
@@ -83,8 +84,29 @@ const updateMenuItem = asyncHandler(async (req, res) => {
       return error(res, 400, 'Category not found');
     }
   }
-  if (update.image) {
-    update.image = normalizeImage(update.image);
+
+  let previousPublicId;
+  if ('image' in update) {
+    if (update.image) {
+      if (typeof update.image === 'string') {
+        // The client sends the plain URL. Keep the Cloudinary publicId when
+        // the URL is unchanged (otherwise it would be dropped on every edit).
+        const existing = await MenuItem.findById(req.params.id).select('image');
+        if (existing?.image?.url === update.image) {
+          update.image = { url: update.image, publicId: existing.image.publicId };
+        } else {
+          previousPublicId = existing?.image?.publicId;
+          update.image = { url: update.image };
+        }
+      } else {
+        update.image = normalizeImage(update.image);
+      }
+    } else {
+      // Explicitly clearing the image field.
+      const existing = await MenuItem.findById(req.params.id).select('image');
+      previousPublicId = existing?.image?.publicId;
+      update.image = null;
+    }
   }
 
   const menuItem = await MenuItem.findByIdAndUpdate(req.params.id, update, {
@@ -95,16 +117,29 @@ const updateMenuItem = asyncHandler(async (req, res) => {
   if (!menuItem) {
     return error(res, 404, 'Menu item not found');
   }
+
+  // Replaced/removed image: drop the old Cloudinary asset (best effort).
+  if (previousPublicId) {
+    await deleteCloudinaryImage(previousPublicId);
+  }
+
   return success(res, 200, toClientItem(menuItem), 'Menu item updated');
 });
 
 // DELETE /api/menu/:id (admin)
-// TODO: Also delete Cloudinary image via publicId.
 const deleteMenuItem = asyncHandler(async (req, res) => {
-  const menuItem = await MenuItem.findByIdAndDelete(req.params.id);
+  const menuItem = await MenuItem.findById(req.params.id);
   if (!menuItem) {
     return error(res, 404, 'Menu item not found');
   }
+
+  await MenuItem.findByIdAndDelete(req.params.id);
+
+  // Also remove the Cloudinary asset when it belongs to this item.
+  if (menuItem.image?.publicId) {
+    await deleteCloudinaryImage(menuItem.image.publicId);
+  }
+
   return success(res, 200, { _id: req.params.id }, 'Menu item deleted');
 });
 

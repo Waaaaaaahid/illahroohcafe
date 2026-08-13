@@ -34,4 +34,18 @@ const buildUploader = (folder = 'cafe-menu') => {
   return multer({ storage });
 };
 
-module.exports = { buildUploader, isCloudinaryConfigured };
+/**
+ * Best-effort removal of a Cloudinary asset by its publicId.
+ * No-ops when Cloudinary is not configured or the id is missing.
+ */
+const deleteCloudinaryImage = async (publicId) => {
+  if (!isCloudinaryConfigured() || !publicId) return;
+  try {
+    configureCloudinary();
+    await cloudinary.uploader.destroy(String(publicId));
+  } catch (error) {
+    console.warn('Cloudinary delete skipped:', error.message);
+  }
+};
+
+module.exports = { buildUploader, isCloudinaryConfigured, deleteCloudinaryImage };

@@ -1,8 +1,22 @@
 import { api, getStoredSession, API_BASE_URL } from "@/services/api";
-import type { CafeSettings, Category, MenuItem, User } from "@/lib/types";
+import type { CafeSettings, Category, MenuItem, Order, User } from "@/lib/types";
+
+/** Server-computed dashboard statistics (backend /api/admin/stats). */
+export interface AdminStats {
+  totalOrders: number;
+  totalRevenue: number;
+  todayOrders: number;
+  totalUsers: number;
+  menuItems: number;
+  statusBreakdown: { _id: string; count: number }[];
+  topSellingItems: { _id: string; name: string; quantity: number; revenue: number }[];
+  recentOrders: Order[];
+  revenueSeries: { label: string; revenue: number }[];
+}
 
 /** Admin-only mutations. Backend guards these with auth + admin middleware. */
 export const adminService = {
+  getStats: () => api.get<AdminStats>("/admin/stats"),
   createMenuItem: (input: Omit<MenuItem, "_id" | "createdAt" | "updatedAt">) =>
     api.post<MenuItem>("/menu", input),
   updateMenuItem: (id: string, input: Partial<MenuItem>) =>

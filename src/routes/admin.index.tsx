@@ -42,7 +42,18 @@ function isSameDay(dateString: string, day: Date) {
   );
 }
 
-/** Paid revenue per day for the last 7 days, computed from real orders. */
+/** A sale counts toward revenue unless cancelled or the payment failed/refunded. */
+function isSaleRevenue(order: Order) {
+  if (order.orderStatus === "Cancelled") return false;
+  if (order.paymentStatus === "paid") return true;
+  return (
+    order.paymentMethod === "cod" &&
+    order.paymentStatus !== "failed" &&
+    order.paymentStatus !== "refunded"
+  );
+}
+
+/** Paid + COD revenue per day for the last 7 days, computed from real orders. */
 function buildRevenueSeries(orders: Order[]) {
   const days = Array.from({ length: 7 }, (_, index) => {
     const day = new Date();
@@ -54,13 +65,23 @@ function buildRevenueSeries(orders: Order[]) {
   return days.map((day) => ({
     label: day.toLocaleDateString(undefined, { weekday: "short" }),
     revenue: orders
-      .filter((order) => order.paymentStatus === "paid" && isSameDay(order.createdAt, day))
+      .filter((order) => isSaleRevenue(order) && isSameDay(order.createdAt, day))
       .reduce((sum, order) => sum + order.totalAmount, 0),
   }));
 }
 
+/** Compact currency for axis ticks, e.g. ₹0, ₹420, ₹2.3k. */
+function formatAxisCurrency(value: number) {
+  if (value >= 1000) {
+    const compact = value % 1000 === 0 ? value / 1000 : (value / 1000).toFixed(1);
+    return `₹${compact}k`;
+  }
+  return formatCurrency(value);
+}
+
 function AdminDashboard() {
   const ordersQuery = useQuery({ queryKey: ["admin-orders"], queryFn: orderService.listAll });
+  const statsQuery = useQuery({ queryKey: ["admin-stats"], queryFn: adminService.getStats });
   const usersQuery = useQuery({ queryKey: ["admin-users"], queryFn: adminService.listUsers });
   const menuQuery = useQuery({ queryKey: ["admin-menu"], queryFn: menuService.list });
 
@@ -101,9 +122,7 @@ function AdminDashboard() {
   const menuItems = menuQuery.data ?? [];
 
   const todayOrders = orders.filter((order) => isToday(order.createdAt));
-  const totalRevenue = orders
-    .filter((order) => order.paymentStatus === "paid")
-    .reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalRevenue = orders.filter(isSaleRevenue).reduce((sum, order) => sum + order.totalAmount, 0);
 
   const statusBreakdown = ORDER_STATUSES.map((status) => ({
     status,
@@ -114,7 +133,10 @@ function AdminDashboard() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 6);
 
-  const revenueSeries = buildRevenueSeries(orders);
+  // Paid revenue per day for the last 7 days, from the backend stats endpoint.
+  // Falls back to the orders list (equally real data) if the stats call fails.
+  const revenueSeries = statsQuery.data?.revenueSeries ?? buildRevenueSeries(orders);
+  const maxRevenue = Math.max(...revenueSeries.map((entry) => entry.revenue), 0);
 
   return (
     <div className="space-y-8">
@@ -138,9 +160,9 @@ function AdminDashboard() {
         <div className="rounded-3xl border border-border bg-card p-5 shadow-soft xl:col-span-2">
           <h2 className="text-lg font-semibold text-foreground">Weekly revenue</h2>
           <p className="text-xs text-muted-foreground">Paid revenue over the last 7 days</p>
-          <div className="mt-4 h-72">
+          <div className="mt-4 h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueSeries}>
+              <AreaChart data={revenueSeries} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.45} />
@@ -148,8 +170,26 @@ function AdminDashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 8" stroke="var(--color-border)" vertical={false} />
-                <XAxis dataKey="label" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} width={56} />
+                <XAxis
+                  dataKey="label"
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  minTickGap={14}
+                  tickMargin={8}
+                />
+                <YAxis
+                  stroke="var(--color-muted-foreground)"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  width={78}
+                  domain={[0, Math.max(maxRevenue, 1)]}
+                  allowDecimals={false}
+                  tickMargin={6}
+                  tickFormatter={(value: number) => formatAxisCurrency(value)}
+                />
                 <Tooltip
                   contentStyle={{
                     background: "var(--color-card)",

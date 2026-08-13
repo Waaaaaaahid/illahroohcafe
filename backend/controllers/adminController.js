@@ -13,9 +13,30 @@ const getStats = asyncHandler(async (_req, res) => {
       $group: {
         _id: null,
         totalOrders: { $sum: 1 },
+        // Revenue = paid online orders + COD orders (any payment status other
+        // than failed/refunded). Cancelled orders never count as sales.
         totalRevenue: {
           $sum: {
-            $cond: [{ $eq: ['$paymentStatus', 'paid'] }, '$totalAmount', 0],
+            $cond: [
+              {
+                $and: [
+                  { $ne: ['$orderStatus', 'Cancelled'] },
+                  {
+                    $or: [
+                      { $eq: ['$paymentStatus', 'paid'] },
+                      {
+                        $and: [
+                          { $eq: ['$paymentMethod', 'cod'] },
+                          { $nin: ['$paymentStatus', ['failed', 'refunded']] },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              '$totalAmount',
+              0,
+            ],
           },
         },
       },
@@ -60,7 +81,20 @@ const getStats = asyncHandler(async (_req, res) => {
   });
 
   const revenueSeriesRaw = await Order.aggregate([
-    { $match: { paymentStatus: 'paid' } },
+    {
+      // Same sale definition as the totals above: paid online + COD, minus
+      // failed/refunded/cancelled. COD rows stay 'pending' until delivery.
+      $match: {
+        $or: [
+          { paymentStatus: 'paid' },
+          {
+            paymentMethod: 'cod',
+            paymentStatus: { $nin: ['failed', 'refunded'] },
+          },
+        ],
+        orderStatus: { $ne: 'Cancelled' },
+      },
+    },
     {
       $group: {
         _id: {

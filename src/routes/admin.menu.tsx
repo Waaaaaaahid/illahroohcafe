@@ -32,11 +32,18 @@ function AdminMenu() {
 
   const menuQuery = useQuery({ queryKey: ["admin-menu"], queryFn: menuService.list });
 
+  const refreshMenu = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin-menu"] });
+    // The customer menu shares the same backend data — refresh it right away.
+    void queryClient.invalidateQueries({ queryKey: ["menu"] });
+    void queryClient.invalidateQueries({ queryKey: ["categories"] });
+  };
+
   const toggleMutation = useMutation({
     mutationFn: (input: { id: string; available: boolean }) =>
       adminService.toggleAvailability(input.id, input.available),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin-menu"] });
+      refreshMenu();
       notify("Availability updated", { variant: "success" });
     },
     onError: () => notify("Couldn't update availability", { variant: "error" }),
@@ -45,7 +52,7 @@ function AdminMenu() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => adminService.deleteMenuItem(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin-menu"] });
+      refreshMenu();
       notify("Item deleted", { variant: "success" });
       setPendingDelete(null);
     },

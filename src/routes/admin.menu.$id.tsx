@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/services/menuService";
 import { adminService } from "@/services/adminService";
 import { useToast } from "@/context/ToastContext";
@@ -27,6 +27,7 @@ export const Route = createFileRoute("/admin/menu/$id")({
 function AdminMenuEdit() {
   const { id } = useParams({ from: "/admin/menu/$id" });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { notify } = useToast();
   const [values, setValues] = useState<MenuItemFormValues>(emptyMenuItemForm);
 
@@ -50,6 +51,10 @@ function AdminMenuEdit() {
       }),
     onSuccess: () => {
       notify("Menu item updated", { variant: "success" });
+      void queryClient.invalidateQueries({ queryKey: ["admin-menu"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-menu-item", id] });
+      void queryClient.invalidateQueries({ queryKey: ["menu"] });
+      void queryClient.invalidateQueries({ queryKey: ["categories"] });
       void navigate({ to: "/admin/menu" });
     },
     onError: () => notify("Couldn't update menu item", { variant: "error" }),

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ImagePlus } from "lucide-react";
 import { Field, Select, TextArea, TextInput } from "@/components/ui/Field";
@@ -84,6 +84,7 @@ export function MenuItemForm({
   submitLabel: string;
 }) {
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { notify } = useToast();
   const categoriesQuery = useQuery({ queryKey: ["admin-categories"], queryFn: menuService.categories });
 
@@ -103,6 +104,8 @@ export function MenuItemForm({
       });
     } finally {
       setUploading(false);
+      // Reset so picking the same file again re-triggers the change event.
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -178,6 +181,7 @@ export function MenuItemForm({
             <ImagePlus className="size-4" aria-hidden />
             {uploading ? "Uploading…" : "Upload"}
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               className="hidden"
