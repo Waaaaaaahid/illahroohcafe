@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const reviewSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    // Customer reviews are order-level: one review represents the complete order,
+    // not individual menu items. `item` is retained only for backwards compatibility.
     item: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', default: null },
     order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', default: null },
     rating: { type: Number, required: true, min: 1, max: 5 },
@@ -15,8 +17,8 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-reviewSchema.index({ user: 1, item: 1 }, { unique: true, sparse: true });
+// Customer reviews are submitted once for the whole completed order.
+reviewSchema.index({ user: 1, order: 1 }, { unique: true, sparse: true });
 reviewSchema.index({ visible: 1, createdAt: -1 });
-reviewSchema.index({ item: 1, visible: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Review', reviewSchema);
