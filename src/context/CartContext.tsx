@@ -10,11 +10,15 @@ import {
 import { STORAGE_KEYS } from "@/constants";
 import type { CartLine, MenuItem } from "@/lib/types";
 import { useCafe } from "@/context/CafeContext";
+import { couponService } from "@/services/couponService";
 
 interface CartContextValue {
   lines: CartLine[];
   count: number;
   subtotal: number;
+  discount: number;
+  couponCode: string | null;
+  couponError: string | null;
   tax: number;
   deliveryFee: number;
   total: number;
@@ -25,6 +29,8 @@ interface CartContextValue {
   removeItem: (itemId: string) => void;
   increment: (itemId: string) => void;
   decrement: (itemId: string) => void;
+  applyCoupon: (code: string) => Promise<boolean>;
+  removeCoupon: () => void;
   clearCart: () => void;
 }
 
@@ -35,89 +41,56 @@ function readStoredCart(): CartLine[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEYS.cart);
     return raw ? (JSON.parse(raw) as CartLine[]) : [];
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { settings } = useCafe();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [discount, setDiscount] = useState(0);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
-  // Hydration-safe: localStorage is only read after mount.
+  useEffect(() => { setLines(readStoredCart()); }, []);
   useEffect(() => {
-    setLines(readStoredCart());
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(lines));
+    if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(lines));
   }, [lines]);
 
   const addItem = useCallback((item: MenuItem, quantity = 1) => {
     setLines((current) => {
       const existing = current.find((line) => line.itemId === item._id);
-      if (existing) {
-        return current.map((line) =>
-          line.itemId === item._id ? { ...line, quantity: line.quantity + quantity } : line,
-        );
-      }
-      return [
-        ...current,
-        {
-          itemId: item._id,
-          name: item.name,
-          price: item.price,
-          image: item.image,
-          vegetarian: item.vegetarian,
-          quantity,
-        },
-      ];
+      if (existing) return current.map((line) => line.itemId === item._id ? { ...line, quantity: line.quantity + quantity } : line);
+      return [...current, { itemId: item._id, name: item.name, price: item.price, image: item.image, vegetarian: item.vegetarian, quantity }];
     });
   }, []);
-
-  const removeItem = useCallback((itemId: string) => {
-    setLines((current) => current.filter((line) => line.itemId !== itemId));
-  }, []);
-
-  const increment = useCallback((itemId: string) => {
-    setLines((current) =>
-      current.map((line) => (line.itemId === itemId ? { ...line, quantity: line.quantity + 1 } : line)),
-    );
-  }, []);
-
-  const decrement = useCallback((itemId: string) => {
-    setLines((current) =>
-      current
-        .map((line) => (line.itemId === itemId ? { ...line, quantity: line.quantity - 1 } : line))
-        .filter((line) => line.quantity > 0),
-    );
-  }, []);
-
-  const clearCart = useCallback(() => setLines([]), []);
+  const removeItem = useCallback((itemId: string) => setLines((current) => current.filter((line) => line.itemId !== itemId)), []);
+  const increment = useCallback((itemId: string) => setLines((current) => current.map((line) => line.itemId === itemId ? { ...line, quantity: line.quantity + 1 } : line)), []);
+  const decrement = useCallback((itemId: string) => setLines((current) => current.map((line) => line.itemId === itemId ? { ...line, quantity: line.quantity - 1 } : line).filter((line) => line.quantity > 0)), []);
+  const removeCoupon = useCallback(() => { setCouponCode(null); setDiscount(0); setCouponError(null); }, []);
+  const applyCoupon = useCallback(async (code: string) => {
+    setCouponError(null);
+    try {
+      const result = await couponService.validate(code, lines.reduce((sum, line) => sum + line.price * line.quantity, 0));
+      setCouponCode(result.code);
+      setDiscount(result.discount);
+      return true;
+    } catch (error) {
+      setCouponCode(null);
+      setDiscount(0);
+      setCouponError(error instanceof Error ? error.message : "Unable to apply coupon");
+      return false;
+    }
+  }, [lines]);
+  const clearCart = useCallback(() => { setLines([]); removeCoupon(); }, [removeCoupon]);
 
   const value = useMemo<CartContextValue>(() => {
     const subtotal = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
-    const tax = Math.round((subtotal * (settings?.taxPercentage ?? 5)) / 100);
-    const deliveryFee = subtotal === 0 || subtotal > 999 ? 0 : (settings?.deliveryFee ?? 49);
-    return {
-      lines,
-      count: lines.reduce((sum, line) => sum + line.quantity, 0),
-      subtotal,
-      tax,
-      deliveryFee,
-      total: subtotal + tax + deliveryFee,
-      isOpen,
-      openCart: () => setIsOpen(true),
-      closeCart: () => setIsOpen(false),
-      addItem,
-      removeItem,
-      increment,
-      decrement,
-      clearCart,
-    };
-  }, [lines, isOpen, settings, addItem, removeItem, increment, decrement, clearCart]);
+    const discountedSubtotal = Math.max(0, subtotal - discount);
+    const tax = Math.round((discountedSubtotal * (settings?.taxPercentage ?? 5)) / 100);
+    const deliveryFee = discountedSubtotal === 0 || discountedSubtotal > 999 ? 0 : (settings?.deliveryFee ?? 49);
+    return { lines, count: lines.reduce((sum, line) => sum + line.quantity, 0), subtotal, discount, couponCode, couponError, tax, deliveryFee, total: discountedSubtotal + tax + deliveryFee, isOpen, openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false), addItem, removeItem, increment, decrement, applyCoupon, removeCoupon, clearCart };
+  }, [lines, discount, couponCode, couponError, isOpen, settings, addItem, removeItem, increment, decrement, applyCoupon, removeCoupon, clearCart]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
