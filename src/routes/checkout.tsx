@@ -15,13 +15,16 @@ import { validateCheckout, type CheckoutForm, type FieldErrors } from "@/utils/v
 import { STORAGE_KEYS } from "@/constants";
 import type { Order, PaymentMethod } from "@/lib/types";
 
+// Keep this flag as the single frontend switch for enabling online payments later.
+const ONLINE_PAYMENTS_ENABLED = false;
+
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
       { title: "Checkout — Ilarooh" },
-      { name: "description", content: "Enter your delivery details and pay by card or cash on delivery for your Ilarooh order." },
+      { name: "description", content: "Enter your delivery details and pay by cash on delivery for your Ilarooh order." },
       { property: "og:title", content: "Checkout — Ilarooh" },
-      { property: "og:description", content: "Secure checkout with cash on delivery or online payment." },
+      { property: "og:description", content: "Secure checkout with cash on delivery. Online payments coming soon." },
     ],
   }),
   component: CheckoutPage,
@@ -37,8 +40,8 @@ function CheckoutPage() {
   useEffect(() => {
     if (!isReady) return;
     if (!user && lines.length > 0) {
-      notify('Please sign in to place your order', { variant: 'info' });
-      void navigate({ to: '/login' });
+      notify("Please sign in to place your order", { variant: "info" });
+      void navigate({ to: "/login" });
     }
   }, [isReady, user, lines.length, notify, navigate]);
 
@@ -55,6 +58,17 @@ function CheckoutPage() {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
+
+    // Defense-in-depth: online payment cannot create an order while disabled.
+    if (method === "online" && !ONLINE_PAYMENTS_ENABLED) {
+      notify("Online payments are coming soon", {
+        description: "Please select Cash on Delivery to place your order.",
+        variant: "info",
+      });
+      setMethod("cod");
+      return;
+    }
+
     const nextErrors = validateCheckout(form);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -96,8 +110,7 @@ function CheckoutPage() {
       clearCart();
       if (method === "online" && !paymentSettled) {
         notify("Order placed — payment pending", {
-          description:
-            "Your order is confirmed with cash on delivery as the fallback. Pay on delivery if online payment wasn't completed.",
+          description: "Your order is confirmed with cash on delivery as the fallback. Pay on delivery if online payment wasn't completed.",
           variant: "info",
         });
       } else {
@@ -138,11 +151,7 @@ function CheckoutPage() {
         <EmptyState
           title="Sign in to place your order"
           description="Please sign in or register before continuing to checkout."
-          action={
-            <Link to="/login">
-              <Button>Sign in</Button>
-            </Link>
-          }
+          action={<Link to="/login"><Button>Sign in</Button></Link>}
         />
       </div>
     );
@@ -162,52 +171,24 @@ function CheckoutPage() {
             <h2 className="font-display text-xl font-semibold">Delivery details</h2>
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <Field id="co-name" label="Full name" error={errors.name}>
-                <TextInput
-                  id="co-name"
-                  value={form.name}
-                  invalid={Boolean(errors.name)}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
-                />
+                <TextInput id="co-name" value={form.name} invalid={Boolean(errors.name)} onChange={(event) => setForm({ ...form, name: event.target.value })} />
               </Field>
               <Field id="co-phone" label="Phone" error={errors.phone}>
-                <TextInput
-                  id="co-phone"
-                  type="tel"
-                  value={form.phone}
-                  invalid={Boolean(errors.phone)}
-                  onChange={(event) => setForm({ ...form, phone: event.target.value })}
-                />
+                <TextInput id="co-phone" type="tel" value={form.phone} invalid={Boolean(errors.phone)} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
               </Field>
               <div className="sm:col-span-2">
                 <Field id="co-email" label="Email" error={errors.email}>
-                  <TextInput
-                    id="co-email"
-                    type="email"
-                    value={form.email}
-                    invalid={Boolean(errors.email)}
-                    onChange={(event) => setForm({ ...form, email: event.target.value })}
-                  />
+                  <TextInput id="co-email" type="email" value={form.email} invalid={Boolean(errors.email)} onChange={(event) => setForm({ ...form, email: event.target.value })} />
                 </Field>
               </div>
               <div className="sm:col-span-2">
                 <Field id="co-address" label="Delivery address" error={errors.address}>
-                  <TextArea
-                    id="co-address"
-                    value={form.address}
-                    invalid={Boolean(errors.address)}
-                    onChange={(event) => setForm({ ...form, address: event.target.value })}
-                    placeholder="Flat, building, street, landmark, pin code"
-                  />
+                  <TextArea id="co-address" value={form.address} invalid={Boolean(errors.address)} onChange={(event) => setForm({ ...form, address: event.target.value })} placeholder="Flat, building, street, landmark, pin code" />
                 </Field>
               </div>
               <div className="sm:col-span-2">
                 <Field id="co-notes" label="Notes for the kitchen" hint="Optional">
-                  <TextInput
-                    id="co-notes"
-                    value={form.notes}
-                    onChange={(event) => setForm({ ...form, notes: event.target.value })}
-                    placeholder="Less spice, extra napkins…"
-                  />
+                  <TextInput id="co-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder="Less spice, extra napkins…" />
                 </Field>
               </div>
             </div>
@@ -224,20 +205,14 @@ function CheckoutPage() {
                 description="Pay the rider when your order arrives."
               />
               <PaymentOption
-                active={method === "online"}
-                onSelect={() => setMethod("online")}
+                active={false}
+                onSelect={() => undefined}
+                disabled={!ONLINE_PAYMENTS_ENABLED}
                 icon={CreditCard}
                 title="Online payment"
                 description="Card, UPI or wallet via Razorpay."
               />
             </div>
-            {method === "online" && !RAZORPAY_KEY_ID ? (
-              <p className="mt-4 rounded-2xl bg-secondary p-4 text-xs text-muted-foreground">
-                Razorpay isn't configured yet — your order will be placed with payment due on
-                delivery. Add <code className="mx-1 rounded bg-card px-1.5 py-0.5">VITE_RAZORPAY_KEY_ID</code>{" "}
-                to accept card/UPI payments.
-              </p>
-            ) : null}
           </section>
         </div>
 
@@ -250,27 +225,20 @@ function CheckoutPage() {
                   <span className="block truncate font-medium">{line.name}</span>
                   <span className="text-xs text-muted-foreground">× {line.quantity}</span>
                 </span>
-                <span className="font-medium">
-                  {formatCurrency(line.price * line.quantity, settings.currency)}
-                </span>
+                <span className="font-medium">{formatCurrency(line.price * line.quantity, settings.currency)}</span>
               </li>
             ))}
           </ul>
           <dl className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
             <Row label="Subtotal" value={formatCurrency(subtotal, settings.currency)} />
             <Row label={`Tax (${settings.taxPercentage}%)`} value={formatCurrency(tax, settings.currency)} />
-            <Row
-              label="Delivery"
-              value={deliveryFee === 0 ? "Free" : formatCurrency(deliveryFee, settings.currency)}
-            />
+            <Row label="Delivery" value={deliveryFee === 0 ? "Free" : formatCurrency(deliveryFee, settings.currency)} />
             <div className="flex justify-between border-t border-border pt-3 text-base font-semibold">
               <dt>Total</dt>
               <dd>{formatCurrency(total, settings.currency)}</dd>
             </div>
           </dl>
-          <Button type="submit" variant="accent" size="lg" loading={placing} className="mt-6 w-full">
-            Place order
-          </Button>
+          <Button type="submit" variant="accent" size="lg" loading={placing} className="mt-6 w-full">Place order</Button>
         </aside>
       </form>
     </div>
@@ -278,63 +246,59 @@ function CheckoutPage() {
 }
 
 function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between text-muted-foreground">
-      <dt>{label}</dt>
-      <dd className="font-medium text-foreground">{value}</dd>
-    </div>
-  );
+  return <div className="flex justify-between text-muted-foreground"><dt>{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>;
 }
 
 function PaymentOption({
   active,
   onSelect,
+  disabled = false,
   icon: Icon,
   title,
   description,
 }: {
   active: boolean;
   onSelect: () => void;
+  disabled?: boolean;
   icon: typeof Banknote;
   title: string;
   description: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={active}
-      className={`flex gap-4 rounded-2xl border p-5 text-left transition-all ${
-        active ? "border-accent bg-accent/8 shadow-soft" : "border-border hover:border-accent/50"
-      }`}
-    >
-      <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
-          active ? "bg-amber-gradient text-accent-foreground" : "bg-secondary text-muted-foreground"
-        }`}
+    <div className="relative">
+      {disabled ? (
+        <span className="absolute right-3 top-3 z-10 rounded-full border border-border bg-background px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] text-muted-foreground shadow-sm">
+          COMING SOON
+        </span>
+      ) : null}
+      <button
+        type="button"
+        onClick={onSelect}
+        disabled={disabled}
+        aria-disabled={disabled}
+        aria-pressed={active}
+        className={`flex w-full gap-4 rounded-2xl border p-5 pr-28 text-left transition-all ${
+          active ? "border-accent bg-accent/8 shadow-soft" : "border-border"
+        } ${disabled ? "cursor-not-allowed opacity-60" : "hover:border-accent/50"}`}
       >
-        <Icon className="size-4.5" />
-      </span>
-      <span>
-        <span className="block text-sm font-semibold">{title}</span>
-        <span className="mt-1 block text-xs text-muted-foreground">{description}</span>
-      </span>
-    </button>
+        <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${active ? "bg-amber-gradient text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
+          <Icon className="size-4.5" />
+        </span>
+        <span>
+          <span className="block text-sm font-semibold">{title}</span>
+          <span className="mt-1 block text-xs text-muted-foreground">
+            {disabled ? "Online payments are not available yet." : description}
+          </span>
+        </span>
+      </button>
+    </div>
   );
 }
 
-/**
- * Runs the live Razorpay checkout flow for an online order.
- * Returns true when the payment was captured and verified, false when the
- * user cancelled or the gateway wasn't reachable (order stays + payment due on delivery).
- */
 async function runRazorpayCheckout(order: Order): Promise<boolean> {
-  if (!RAZORPAY_KEY_ID) return false;
-
+  if (!ONLINE_PAYMENTS_ENABLED || !RAZORPAY_KEY_ID) return false;
   const result = await openRazorpayCheckout(order);
   if (!result) return false;
-
-  // The server verifies the HMAC signature and marks the order paid.
   await paymentService.verify({
     razorpayOrderId: result.razorpayOrderId,
     razorpayPaymentId: result.response.razorpay_payment_id,
@@ -360,10 +324,7 @@ declare global {
   }
 }
 
-/** Loads the Razorpay checkout script once and opens the payment modal. */
-async function openRazorpayCheckout(
-  order: Order,
-): Promise<{ razorpayOrderId: string; response: RazorpayPaymentResponse } | null> {
+async function openRazorpayCheckout(order: Order): Promise<{ razorpayOrderId: string; response: RazorpayPaymentResponse } | null> {
   if (typeof window === "undefined") return null;
 
   if (!window.Razorpay) {
@@ -389,14 +350,10 @@ async function openRazorpayCheckout(
   let razorpayOrderId: string;
   let amount: number;
   try {
-    const created = await paymentService.createRazorpayOrder({
-      orderId: order._id,
-      amount: order.totalAmount,
-    });
+    const created = await paymentService.createRazorpayOrder({ orderId: order._id, amount: order.totalAmount });
     razorpayOrderId = created.razorpayOrderId;
     amount = created.amount;
   } catch {
-    // Gateway not reachable or not configured — order stays with payment due on delivery.
     return null;
   }
 
@@ -409,9 +366,7 @@ async function openRazorpayCheckout(
       description: `Order ${order.code}`,
       order_id: razorpayOrderId,
       handler: (value: RazorpayPaymentResponse) => resolve(value),
-      modal: {
-        ondismiss: () => resolve(null),
-      },
+      modal: { ondismiss: () => resolve(null) },
       theme: { color: "#B4531F" },
     });
     checkout.on("payment.failed", () => resolve(null));
