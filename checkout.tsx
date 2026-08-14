@@ -19,9 +19,9 @@ export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
       { title: "Checkout — Ilarooh" },
-      { name: "description", content: "Enter your delivery details and pay by cash on delivery for your Ilarooh order." },
+      { name: "description", content: "Enter your delivery details and choose cash on delivery or secure online payment." },
       { property: "og:title", content: "Checkout — Ilarooh" },
-      { property: "og:description", content: "Secure checkout with cash on delivery." },
+      { property: "og:description", content: "Secure checkout with cash on delivery or Razorpay online payment." },
     ],
   }),
   component: CheckoutPage,
@@ -50,8 +50,6 @@ function CheckoutPage() {
     notes: "",
   });
   const [errors, setErrors] = useState<FieldErrors<CheckoutForm>>({});
-  // Keep the payment-method state so online payments can be enabled later without
-  // redesigning checkout. For now only COD is intentionally selectable.
   const [method, setMethod] = useState<PaymentMethod>("cod");
   const [placing, setPlacing] = useState(false);
 
@@ -61,6 +59,14 @@ function CheckoutPage() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
       notify("Please complete your delivery details", { variant: "error" });
+      return;
+    }
+
+    if (method === "online" && !RAZORPAY_KEY_ID) {
+      notify("Online payment is not configured", {
+        description: "Please try Cash on Delivery or configure the Razorpay test key.",
+        variant: "error",
+      });
       return;
     }
 
@@ -90,21 +96,21 @@ function CheckoutPage() {
       let paymentSettled = method === "cod";
       if (method === "online") {
         paymentSettled = await runRazorpayCheckout(order);
+        if (!paymentSettled) {
+          notify("Online payment was not completed", {
+            description: "Your order was created with payment pending. Please check the order status before retrying.",
+            variant: "error",
+          });
+          setPlacing(false);
+          return;
+        }
       }
 
       if (typeof window !== "undefined") {
         window.localStorage.setItem(STORAGE_KEYS.lastOrder, order._id);
       }
       clearCart();
-      if (method === "online" && !paymentSettled) {
-        notify("Order placed — payment pending", {
-          description:
-            "Your order is confirmed with cash on delivery as the fallback. Pay on delivery if online payment wasn't completed.",
-          variant: "info",
-        });
-      } else {
-        notify("Order placed successfully", { description: `Reference ${order.code}`, variant: "success" });
-      }
+      notify("Order placed successfully", { description: `Reference ${order.code}`, variant: "success" });
       await navigate({ to: "/order-success", search: { orderId: order._id } });
     } catch (error) {
       notify("We couldn't place your order", {
@@ -140,11 +146,7 @@ function CheckoutPage() {
         <EmptyState
           title="Sign in to place your order"
           description="Please sign in or register before continuing to checkout."
-          action={
-            <Link to="/login">
-              <Button>Sign in</Button>
-            </Link>
-          }
+          action={<Link to="/login"><Button>Sign in</Button></Link>}
         />
       </div>
     );
@@ -163,27 +165,11 @@ function CheckoutPage() {
           <section className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
             <h2 className="font-display text-xl font-semibold">Delivery details</h2>
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
-              <Field id="co-name" label="Full name" error={errors.name}>
-                <TextInput id="co-name" value={form.name} invalid={Boolean(errors.name)} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-              </Field>
-              <Field id="co-phone" label="Phone" error={errors.phone}>
-                <TextInput id="co-phone" type="tel" value={form.phone} invalid={Boolean(errors.phone)} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-              </Field>
-              <div className="sm:col-span-2">
-                <Field id="co-email" label="Email" error={errors.email}>
-                  <TextInput id="co-email" type="email" value={form.email} invalid={Boolean(errors.email)} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-                </Field>
-              </div>
-              <div className="sm:col-span-2">
-                <Field id="co-address" label="Delivery address" error={errors.address}>
-                  <TextArea id="co-address" value={form.address} invalid={Boolean(errors.address)} onChange={(event) => setForm({ ...form, address: event.target.value })} placeholder="Flat, building, street, landmark, pin code" />
-                </Field>
-              </div>
-              <div className="sm:col-span-2">
-                <Field id="co-notes" label="Notes for the kitchen" hint="Optional">
-                  <TextInput id="co-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder="Less spice, extra napkins…" />
-                </Field>
-              </div>
+              <Field id="co-name" label="Full name" error={errors.name}><TextInput id="co-name" value={form.name} invalid={Boolean(errors.name)} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
+              <Field id="co-phone" label="Phone" error={errors.phone}><TextInput id="co-phone" type="tel" value={form.phone} invalid={Boolean(errors.phone)} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></Field>
+              <div className="sm:col-span-2"><Field id="co-email" label="Email" error={errors.email}><TextInput id="co-email" type="email" value={form.email} invalid={Boolean(errors.email)} onChange={(event) => setForm({ ...form, email: event.target.value })} /></Field></div>
+              <div className="sm:col-span-2"><Field id="co-address" label="Delivery address" error={errors.address}><TextArea id="co-address" value={form.address} invalid={Boolean(errors.address)} onChange={(event) => setForm({ ...form, address: event.target.value })} placeholder="Flat, building, street, landmark, pin code" /></Field></div>
+              <div className="sm:col-span-2"><Field id="co-notes" label="Notes for the kitchen" hint="Optional"><TextInput id="co-notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder="Less spice, extra napkins…" /></Field></div>
             </div>
           </section>
 
@@ -191,11 +177,7 @@ function CheckoutPage() {
             <h2 className="font-display text-xl font-semibold">Payment method</h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <PaymentOption active={method === "cod"} onSelect={() => setMethod("cod")} icon={Banknote} title="Cash on delivery" description="Pay the rider when your order arrives." />
-              <PaymentOption active={false} onSelect={() => undefined} icon={CreditCard} title="Online payment" description="Card, UPI or wallet via Razorpay." disabled />
-            </div>
-            <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3 text-xs text-muted-foreground">
-              <span>Online payments are not available yet.</span>
-              <span className="shrink-0 rounded-full bg-accent/12 px-2.5 py-1 font-semibold text-accent">Coming soon</span>
+              <PaymentOption active={method === "online"} onSelect={() => setMethod("online")} icon={CreditCard} title="Online payment" description="Card, UPI or wallet via Razorpay Test Mode." />
             </div>
           </section>
         </div>
@@ -216,7 +198,7 @@ function CheckoutPage() {
             <Row label="Delivery" value={deliveryFee === 0 ? "Free" : formatCurrency(deliveryFee, settings.currency)} />
             <div className="flex justify-between border-t border-border pt-3 text-base font-semibold"><dt>Total</dt><dd>{formatCurrency(total, settings.currency)}</dd></div>
           </dl>
-          <Button type="submit" variant="accent" size="lg" loading={placing} className="mt-6 w-full">Place order</Button>
+          <Button type="submit" variant="accent" size="lg" loading={placing} className="mt-6 w-full">{method === "online" ? "Pay & place order" : "Place order"}</Button>
         </aside>
       </form>
     </div>
@@ -227,37 +209,18 @@ function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between text-muted-foreground"><dt>{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>;
 }
 
-function PaymentOption({
-  active,
-  onSelect,
-  icon: Icon,
-  title,
-  description,
-  disabled = false,
-}: {
-  active: boolean;
-  onSelect: () => void;
-  icon: typeof Banknote;
-  title: string;
-  description: string;
-  disabled?: boolean;
-}) {
+function PaymentOption({ active, onSelect, icon: Icon, title, description }: { active: boolean; onSelect: () => void; icon: typeof Banknote; title: string; description: string }) {
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={active}
-      aria-disabled={disabled}
-      disabled={disabled}
-      className={`relative flex gap-4 rounded-2xl border p-5 text-left transition-all ${
-        active ? "border-accent bg-accent/8 shadow-soft" : "border-border"
-      } ${disabled ? "cursor-not-allowed opacity-65" : "hover:border-accent/50"}`}
+      className={`relative flex gap-4 rounded-2xl border p-5 text-left transition-all ${active ? "border-accent bg-accent/8 shadow-soft" : "border-border hover:border-accent/50"}`}
     >
-      {disabled ? <span className="absolute right-3 top-3 rounded-full bg-accent/12 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-accent">Coming soon</span> : null}
       <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${active ? "bg-amber-gradient text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
         <Icon className="size-4.5" />
       </span>
-      <span className="pr-16">
+      <span>
         <span className="block text-sm font-semibold">{title}</span>
         <span className="mt-1 block text-xs text-muted-foreground">{description}</span>
       </span>
@@ -265,20 +228,16 @@ function PaymentOption({
   );
 }
 
-/**
- * Runs the live Razorpay checkout flow for an online order.
- * Kept intact for future activation once online payments are ready.
- */
 async function runRazorpayCheckout(order: Order): Promise<boolean> {
   if (!RAZORPAY_KEY_ID) return false;
   const result = await openRazorpayCheckout(order);
   if (!result) return false;
-  await paymentService.verify({
+  const verified = await paymentService.verify({
     razorpayOrderId: result.razorpayOrderId,
     razorpayPaymentId: result.response.razorpay_payment_id,
     razorpaySignature: result.response.razorpay_signature,
   });
-  return true;
+  return Boolean(verified?.verified);
 }
 
 interface RazorpayPaymentResponse {
@@ -298,7 +257,6 @@ declare global {
   }
 }
 
-/** Loads the Razorpay checkout script once and opens the payment modal. */
 async function openRazorpayCheckout(order: Order): Promise<{ razorpayOrderId: string; response: RazorpayPaymentResponse } | null> {
   if (typeof window === "undefined") return null;
   if (!window.Razorpay) {
@@ -307,6 +265,7 @@ async function openRazorpayCheckout(order: Order): Promise<{ razorpayOrderId: st
         const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
         if (existing) {
           existing.addEventListener("load", () => resolve());
+          existing.addEventListener("error", () => reject(new Error("Could not load the payment gateway")));
           return;
         }
         const script = document.createElement("script");
