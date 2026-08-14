@@ -177,7 +177,7 @@ function CheckoutPage() {
             <h2 className="font-display text-xl font-semibold">Payment method</h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <PaymentOption active={method === "cod"} onSelect={() => setMethod("cod")} icon={Banknote} title="Cash on delivery" description="Pay the rider when your order arrives." />
-              <PaymentOption active={method === "online"} onSelect={() => setMethod("online")} icon={CreditCard} title="Online payment" description="Card, UPI or wallet via Razorpay Test Mode." />
+              <PaymentOption active={method === "online"} onSelect={() => setMethod("online")} icon={CreditCard} title="Online payment" description="Card, UPI or wallet via Razorpay Test Mode — enabled." />
             </div>
           </section>
         </div>
