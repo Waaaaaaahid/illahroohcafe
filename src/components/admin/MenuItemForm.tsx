@@ -60,10 +60,11 @@ function SwitchRow({
     >
       {label}
       <span
-        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted"}`}
+        className={`relative block h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted"}`}
+        aria-hidden="true"
       >
         <span
-          className={`absolute top-0.5 size-5 rounded-full bg-card shadow-soft transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`}
+          className={`absolute left-0.5 top-0.5 block size-5 rounded-full bg-card shadow-soft transition-[left] duration-200 ease-out ${checked ? "left-5" : "left-0.5"}`}
         />
       </span>
     </button>
@@ -104,7 +105,6 @@ export function MenuItemForm({
       });
     } finally {
       setUploading(false);
-      // Reset so picking the same file again re-triggers the change event.
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -119,83 +119,34 @@ export function MenuItemForm({
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="name" label="Item name">
-          <TextInput
-            id="name"
-            required
-            value={values.name}
-            onChange={(event) => set("name", event.target.value)}
-            placeholder="Signature Cappuccino"
-          />
+          <TextInput id="name" required value={values.name} onChange={(event) => set("name", event.target.value)} placeholder="Signature Cappuccino" />
         </Field>
         <Field id="price" label="Price (INR)">
-          <TextInput
-            id="price"
-            required
-            type="number"
-            min={0}
-            step="0.01"
-            value={values.price}
-            onChange={(event) => set("price", event.target.value)}
-            placeholder="240"
-          />
+          <TextInput id="price" required type="number" min={0} step="0.01" value={values.price} onChange={(event) => set("price", event.target.value)} placeholder="240" />
         </Field>
       </div>
 
       <Field id="description" label="Description">
-        <TextArea
-          id="description"
-          required
-          value={values.description}
-          onChange={(event) => set("description", event.target.value)}
-          placeholder="Double ristretto, silk-steamed milk, cocoa dust."
-        />
+        <TextArea id="description" required value={values.description} onChange={(event) => set("description", event.target.value)} placeholder="Double ristretto, silk-steamed milk, cocoa dust." />
       </Field>
 
       <Field id="category" label="Category">
-        <Select
-          id="category"
-          required
-          value={values.category}
-          onChange={(event) => set("category", event.target.value)}
-        >
-          <option value="" disabled>
-            Select a category
-          </option>
-          {(categoriesQuery.data ?? []).map((category) => (
-            <option key={category._id} value={category.slug}>
-              {category.name}
-            </option>
-          ))}
+        <Select id="category" required value={values.category} onChange={(event) => set("category", event.target.value)}>
+          <option value="" disabled>Select a category</option>
+          {(categoriesQuery.data ?? []).map((category) => <option key={category._id} value={category.slug}>{category.name}</option>)}
         </Select>
       </Field>
 
       <Field id="image" label="Image URL" hint="Paste a URL or upload a file below">
         <div className="flex flex-col gap-3 sm:flex-row">
-          <TextInput
-            id="image"
-            value={values.image}
-            onChange={(event) => set("image", event.target.value)}
-            placeholder="https://images.unsplash.com/..."
-          />
+          <TextInput id="image" value={values.image} onChange={(event) => set("image", event.target.value)} placeholder="https://images.unsplash.com/..." />
           <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary">
             <ImagePlus className="size-4" aria-hidden />
             {uploading ? "Uploading…" : "Upload"}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(event) => void handleFile(event.target.files?.[0])}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(event) => void handleFile(event.target.files?.[0])} />
           </label>
         </div>
-        {values.image ? (
-          <img
-            src={values.image}
-            alt="Preview"
-            className="mt-3 h-32 w-full rounded-xl object-cover"
-          />
-        ) : null}
+        {values.image ? <img src={values.image} alt="Preview" className="mt-3 h-32 w-full rounded-xl object-cover" /> : null}
       </Field>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -205,9 +156,7 @@ export function MenuItemForm({
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="submit" variant="accent" loading={submitting}>
-          {submitLabel}
-        </Button>
+        <Button type="submit" variant="accent" loading={submitting}>{submitLabel}</Button>
       </div>
     </form>
   );
