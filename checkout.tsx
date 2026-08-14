@@ -15,6 +15,8 @@ import { validateCheckout, type CheckoutForm, type FieldErrors } from "@/utils/v
 import { STORAGE_KEYS } from "@/constants";
 import type { Order, PaymentMethod } from "@/lib/types";
 
+const SAVED_ADDRESS_KEY = "ilarooh_saved_delivery_address";
+
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Checkout — Ilarooh" }] }),
   component: CheckoutPage,
@@ -26,14 +28,25 @@ function CheckoutPage() {
   const { user, isReady } = useAuth();
   const { notify } = useToast();
   const navigate = useNavigate();
-  const [form, setForm] = useState<CheckoutForm & { notes: string }>({ name: user?.name ?? "", phone: user?.phone ?? "", email: user?.email ?? "", address: "", notes: "" });
+  const [savedAddress, setSavedAddress] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(SAVED_ADDRESS_KEY) ?? "";
+  });
+  const [form, setForm] = useState<CheckoutForm & { notes: string }>(() => ({ name: user?.name ?? "", phone: user?.phone ?? "", email: user?.email ?? "", address: savedAddressValue(), notes: "" }));
   const [errors, setErrors] = useState<FieldErrors<CheckoutForm>>({});
   const [method, setMethod] = useState<PaymentMethod>("cod");
   const [placing, setPlacing] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(false);
 
   useEffect(() => {
     if (isReady && !user && lines.length > 0) { notify("Please sign in to place your order", { variant: "info" }); void navigate({ to: "/login" }); }
   }, [isReady, user, lines.length, notify, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      setForm((current) => ({ ...current, name: current.name || user.name, phone: current.phone || user.phone, email: current.email || user.email }));
+    }
+  }, [user]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -47,11 +60,22 @@ function CheckoutPage() {
         const paid = await runRazorpayCheckout(order);
         if (!paid) { notify("Online payment was not completed", { description: "Please complete the Razorpay test payment or choose Cash on Delivery.", variant: "error" }); setPlacing(false); return; }
       }
-      if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEYS.lastOrder, order._id);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STORAGE_KEYS.lastOrder, order._id);
+        if (form.address.trim()) window.localStorage.setItem(SAVED_ADDRESS_KEY, form.address.trim());
+      }
+      if (form.address.trim()) setSavedAddress(form.address.trim());
       clearCart(); notify("Order placed successfully", { description: `Reference ${order.code}`, variant: "success" });
       await navigate({ to: "/order-success", search: { orderId: order._id } });
     } catch (error) { notify("We couldn't place your order", { description: error instanceof Error ? error.message : "Please try again.", variant: "error" }); }
     finally { setPlacing(false); }
+  };
+
+  const useSavedAddress = () => {
+    if (!savedAddress) return;
+    setForm((current) => ({ ...current, address: savedAddress }));
+    setEditingAddress(false);
+    setErrors((current) => ({ ...current, address: undefined }));
   };
 
   if (lines.length === 0) return <div className="container-page py-20"><EmptyState title="Nothing to check out" description="Add a few things to your cart first." action={<Link to="/menu"><Button><ShoppingBag className="size-4" /> Browse the menu</Button></Link>} /></div>;
@@ -66,7 +90,9 @@ function CheckoutPage() {
           <Field id="co-name" label="Full name" error={errors.name}><TextInput id="co-name" value={form.name} invalid={Boolean(errors.name)} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
           <Field id="co-phone" label="Phone" error={errors.phone}><TextInput id="co-phone" type="tel" value={form.phone} invalid={Boolean(errors.phone)} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
           <div className="sm:col-span-2"><Field id="co-email" label="Email" error={errors.email}><TextInput id="co-email" type="email" value={form.email} invalid={Boolean(errors.email)} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field></div>
-          <div className="sm:col-span-2"><Field id="co-address" label="Delivery address" error={errors.address}><TextArea id="co-address" value={form.address} invalid={Boolean(errors.address)} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Flat, building, street, landmark, pin code" /></Field></div>
+          <div className="sm:col-span-2">
+            {savedAddress && !editingAddress ? <div className="space-y-3"><div className="rounded-2xl border border-accent/40 bg-accent/5 p-4"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Home</p><p className="mt-2 text-sm leading-6">{savedAddress}</p></div><button type="button" className="text-xs font-semibold text-accent hover:underline" onClick={() => setEditingAddress(true)}>Change</button></div></div><button type="button" className="text-sm font-semibold text-accent hover:underline" onClick={useSavedAddress}>Use saved address</button></div> : <Field id="co-address" label="Delivery address" error={errors.address}><TextArea id="co-address" value={form.address} invalid={Boolean(errors.address)} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Flat, building, street, landmark, pin code" /></Field>}
+          </div>
           <div className="sm:col-span-2"><Field id="co-notes" label="Notes for the kitchen" hint="Optional"><TextInput id="co-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Less spice, extra napkins…" /></Field></div>
         </div></section>
         <section className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8"><h2 className="font-display text-xl font-semibold">Payment method</h2><div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -79,6 +105,10 @@ function CheckoutPage() {
   </div>;
 }
 
+function savedAddressValue() {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(SAVED_ADDRESS_KEY) ?? "";
+}
 function Row({ label, value }: { label: string; value: string }) { return <div className="flex justify-between text-muted-foreground"><dt>{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>; }
 function PaymentOption({ active, onSelect, icon: Icon, title, description }: { active: boolean; onSelect: () => void; icon: typeof Banknote; title: string; description: string }) { return <button type="button" onClick={onSelect} aria-pressed={active} className={`relative flex gap-4 rounded-2xl border p-5 text-left transition-all ${active ? "border-accent bg-accent/8 shadow-soft" : "border-border hover:border-accent/50"}`}><span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${active ? "bg-amber-gradient text-accent-foreground" : "bg-secondary text-muted-foreground"}`}><Icon className="size-4.5" /></span><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-xs text-muted-foreground">{description}</span></span></button>; }
 
