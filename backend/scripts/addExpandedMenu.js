@@ -16,6 +16,7 @@ const MENU = [
   ['Mojitos & Coolers','Classic Mint Mojito',150],['Mojitos & Coolers','Blue Lagoon Mojito',160],['Mojitos & Coolers','Green Apple Mojito',160],['Mojitos & Coolers','Watermelon Mojito',160],['Mojitos & Coolers','Strawberry Mojito',160],['Mojitos & Coolers','Peach Mojito',160],['Mojitos & Coolers','Kala Khatta Mojito',160],['Mojitos & Coolers','Mango Mojito',160],['Mojitos & Coolers','Lemon Mint Cooler',150],['Mojitos & Coolers','Berry Lemon Cooler',170],
   ['Coffee & Shakes','Classic Cold Coffee',160],['Coffee & Shakes','Hazelnut Cold Coffee',179],['Coffee & Shakes','Irish Cold Coffee',179],['Coffee & Shakes','Java Chip Cold Coffee',189],['Coffee & Shakes','Cappuccino',140],['Coffee & Shakes','Cafe Latte',150],['Coffee & Shakes','Chocolate Shake',170],['Coffee & Shakes','Strawberry Shake',170],['Coffee & Shakes','Mango Shake',170],['Coffee & Shakes','Butterscotch Shake',170],
   ['Desserts','Chocolate Brownie',120],['Desserts','Brownie With Ice Cream',180],['Desserts','Chocolate Lava Cake',170],['Desserts','Chocolate Sundae',160],['Desserts','Vanilla Sundae',150],['Desserts','Oreo Sundae',180],['Desserts','Nutella Brownie',190],['Desserts','Choco Chip Cookie',90],['Desserts','New York Cheesecake',190],['Desserts','Gulab Jamun With Ice Cream',170],
+  ['Healthy Bowls & Salads','Grilled Chicken Caesar Salad',280],['Healthy Bowls & Salads','Peri Peri Chicken Salad',290],['Healthy Bowls & Salads','Chicken Tikka Salad Bowl',300],['Healthy Bowls & Salads','Mexican Chicken Rice Bowl',310],['Healthy Bowls & Salads','Teriyaki Chicken Rice Bowl',320],['Healthy Bowls & Salads','Grilled Paneer Rice Bowl',280],['Healthy Bowls & Salads','Mediterranean Veg Salad',240],['Healthy Bowls & Salads','Corn & Bean Salad Bowl',230],['Healthy Bowls & Salads','Fresh Garden Salad',180],['Healthy Bowls & Salads','Protein Chicken Bowl',330],
 ];
 
 const slugify = (v) => String(v).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -28,9 +29,9 @@ const slugify = (v) => String(v).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-'
   }
   let added = 0;
   for (const [category, name, price] of MENU) {
-    const result = await MenuItem.updateOne({ name, category: categories.get(category) }, { $setOnInsert: { name, category: categories.get(category), price, description: `Freshly prepared ${name.toLowerCase()}.`, available: true, vegetarian: category === 'Desserts' || category === 'Coffee & Shakes' || category === 'Mojitos & Coolers' || (category === 'Pizza [7 inches]' && !/Chicken/i.test(name)) } }, { upsert: true });
+    const result = await MenuItem.updateOne({ name, category: categories.get(category) }, { $setOnInsert: { name, category: categories.get(category), price, description: `Freshly prepared ${name.toLowerCase()}.`, available: true, vegetarian: category === 'Desserts' || category === 'Coffee & Shakes' || category === 'Mojitos & Coolers' || (category === 'Pizza [7 inches]' && !/Chicken/i.test(name)) || (category === 'Healthy Bowls & Salads' && !/Chicken/i.test(name)) } }, { upsert: true });
     if (result.upsertedCount) added += 1;
   }
-  console.log(`Expanded menu ensured: ${MENU.length} target items across 10 categories; ${added} new items inserted.`);
+  console.log(`Expanded menu ensured: ${MENU.length} target items across 11 categories; ${added} new items inserted.`);
   await mongoose.disconnect();
 })().catch(async e => { console.error(e); await mongoose.disconnect().catch(() => {}); process.exit(1); });
