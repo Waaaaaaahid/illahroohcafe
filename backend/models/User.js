@@ -2,6 +2,14 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const savedAddressSchema = new mongoose.Schema(
+  {
+    label: { type: String, trim: true, maxlength: 40, default: 'Home' },
+    address: { type: String, required: true, trim: true, maxlength: 500 },
+  },
+  { timestamps: true },
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -16,13 +24,13 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, trim: true },
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    savedAddresses: { type: [savedAddressSchema], default: [] },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );
 
-// Hash password before saving, only if it was modified.
 userSchema.pre('save', async function hashPassword(next) {
   if (!this.isModified('password')) return next();
   try {
@@ -34,7 +42,6 @@ userSchema.pre('save', async function hashPassword(next) {
   }
 });
 
-// Instance method to compare plaintext password with hashed one.
 userSchema.methods.matchPassword = async function matchPassword(enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };
