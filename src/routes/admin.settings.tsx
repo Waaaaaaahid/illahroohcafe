@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/AppButton";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
 import { useCafe } from "@/context/CafeContext";
@@ -20,17 +20,33 @@ export const Route = createFileRoute("/admin/settings")({
 });
 
 function CafeSettingsPage() {
-  const { settings } = useCafe();
+  const { settings, isLoading } = useCafe();
   const { notify } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
+  const dirtyRef = useRef(false);
+
+  // The first render uses the neutral CafeContext fallback while the API loads.
+  // Hydrate the form once the real saved settings arrive, but never overwrite
+  // values the admin has already started editing.
+  useEffect(() => {
+    if (!isLoading && !dirtyRef.current) {
+      setForm(settings);
+    }
+  }, [isLoading, settings]);
+
+  const updateForm = (next: typeof form) => {
+    dirtyRef.current = true;
+    setForm(next);
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
     try {
       await adminService.updateSettings(form);
+      dirtyRef.current = false;
       await queryClient.invalidateQueries({ queryKey: ["cafe-settings"] });
       notify("Cafe settings updated", { variant: "success" });
     } catch {
@@ -52,16 +68,16 @@ function CafeSettingsPage() {
           <h2 className="font-display text-lg font-semibold">Profile</h2>
           <div className="mt-5 space-y-4">
             <Field id="s-name" label="Cafe name">
-              <TextInput id="s-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <TextInput id="s-name" value={form.name} onChange={(e) => updateForm({ ...form, name: e.target.value })} />
             </Field>
             <Field id="s-logo" label="Logo URL" hint="Cloudinary URL once uploads are connected">
-              <TextInput id="s-logo" value={form.logo} onChange={(e) => setForm({ ...form, logo: e.target.value })} />
+              <TextInput id="s-logo" value={form.logo} onChange={(e) => updateForm({ ...form, logo: e.target.value })} />
             </Field>
             <Field id="s-desc" label="Description">
-              <TextArea id="s-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <TextArea id="s-desc" value={form.description} onChange={(e) => updateForm({ ...form, description: e.target.value })} />
             </Field>
             <Field id="s-address" label="Address">
-              <TextInput id="s-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              <TextInput id="s-address" value={form.address} onChange={(e) => updateForm({ ...form, address: e.target.value })} />
             </Field>
           </div>
         </section>
@@ -70,23 +86,23 @@ function CafeSettingsPage() {
           <h2 className="font-display text-lg font-semibold">Contact</h2>
           <div className="mt-5 space-y-4">
             <Field id="s-phone" label="Phone">
-              <TextInput id="s-phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <TextInput id="s-phone" value={form.phone} onChange={(e) => updateForm({ ...form, phone: e.target.value })} />
             </Field>
             <Field id="s-email" label="Email">
-              <TextInput id="s-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <TextInput id="s-email" type="email" value={form.email} onChange={(e) => updateForm({ ...form, email: e.target.value })} />
             </Field>
             <Field id="s-wa" label="WhatsApp number">
-              <TextInput id="s-wa" value={form.whatsappNumber} onChange={(e) => setForm({ ...form, whatsappNumber: e.target.value })} />
+              <TextInput id="s-wa" value={form.whatsappNumber} onChange={(e) => updateForm({ ...form, whatsappNumber: e.target.value })} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field id="s-ig" label="Instagram">
-                <TextInput id="s-ig" value={form.socialLinks.instagram} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, instagram: e.target.value } })} />
+                <TextInput id="s-ig" value={form.socialLinks.instagram} onChange={(e) => updateForm({ ...form, socialLinks: { ...form.socialLinks, instagram: e.target.value } })} />
               </Field>
               <Field id="s-fb" label="Facebook">
-                <TextInput id="s-fb" value={form.socialLinks.facebook} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, facebook: e.target.value } })} />
+                <TextInput id="s-fb" value={form.socialLinks.facebook} onChange={(e) => updateForm({ ...form, socialLinks: { ...form.socialLinks, facebook: e.target.value } })} />
               </Field>
               <Field id="s-tw" label="Twitter">
-                <TextInput id="s-tw" value={form.socialLinks.twitter} onChange={(e) => setForm({ ...form, socialLinks: { ...form.socialLinks, twitter: e.target.value } })} />
+                <TextInput id="s-tw" value={form.socialLinks.twitter} onChange={(e) => updateForm({ ...form, socialLinks: { ...form.socialLinks, twitter: e.target.value } })} />
               </Field>
             </div>
           </div>
@@ -96,13 +112,13 @@ function CafeSettingsPage() {
           <h2 className="font-display text-lg font-semibold">Commerce</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             <Field id="s-fee" label="Delivery fee">
-              <TextInput id="s-fee" type="number" value={form.deliveryFee} onChange={(e) => setForm({ ...form, deliveryFee: Number(e.target.value) })} />
+              <TextInput id="s-fee" type="number" value={form.deliveryFee} onChange={(e) => updateForm({ ...form, deliveryFee: Number(e.target.value) })} />
             </Field>
             <Field id="s-tax" label="Tax %">
-              <TextInput id="s-tax" type="number" value={form.taxPercentage} onChange={(e) => setForm({ ...form, taxPercentage: Number(e.target.value) })} />
+              <TextInput id="s-tax" type="number" value={form.taxPercentage} onChange={(e) => updateForm({ ...form, taxPercentage: Number(e.target.value) })} />
             </Field>
             <Field id="s-cur" label="Currency">
-              <TextInput id="s-cur" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+              <TextInput id="s-cur" value={form.currency} onChange={(e) => updateForm({ ...form, currency: e.target.value })} />
             </Field>
           </div>
         </section>
@@ -118,7 +134,7 @@ function CafeSettingsPage() {
                   onChange={(e) => {
                     const next = [...form.openingHours];
                     next[index] = { ...entry, day: e.target.value };
-                    setForm({ ...form, openingHours: next });
+                    updateForm({ ...form, openingHours: next });
                   }}
                 />
                 <TextInput
@@ -127,7 +143,7 @@ function CafeSettingsPage() {
                   onChange={(e) => {
                     const next = [...form.openingHours];
                     next[index] = { ...entry, hours: e.target.value };
-                    setForm({ ...form, openingHours: next });
+                    updateForm({ ...form, openingHours: next });
                   }}
                 />
               </div>
@@ -136,7 +152,7 @@ function CafeSettingsPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setForm({ ...form, openingHours: [...form.openingHours, { day: "", hours: "" }] })}
+              onClick={() => updateForm({ ...form, openingHours: [...form.openingHours, { day: "", hours: "" }] })}
             >
               Add row
             </Button>
