@@ -4,8 +4,6 @@ const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Coupon = require('../models/Coupon');
 
-const ONLINE_PAYMENTS_ENABLED = String(process.env.ENABLE_ONLINE_PAYMENTS).toLowerCase() === 'true';
-
 const orderSubscribers = new Map();
 const adminSubscribers = new Set();
 
@@ -49,10 +47,8 @@ const createOrder = asyncHandler(async (req, res) => {
   if (!req.user?.id) return error(res, 401, 'Login required to place an order');
   const { customerDetails, items, subtotal, tax, deliveryFee, totalAmount, paymentMethod, couponCode } = req.body;
 
-  if (paymentMethod === 'online' && !ONLINE_PAYMENTS_ENABLED) {
-    return error(res, 400, 'Online payments are coming soon. Please choose Cash on Delivery.');
-  }
-
+  // Online payments are enabled whenever the Razorpay credentials are configured.
+  // Do not gate checkout behind a separate ENABLE_ONLINE_PAYMENTS flag.
   if (!Array.isArray(items) || items.length === 0) return error(res, 400, 'Order must contain at least one item');
 
   const itemIds = items.map((item) => item.item);
