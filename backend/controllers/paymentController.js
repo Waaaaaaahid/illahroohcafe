@@ -5,6 +5,7 @@ const Payment = require('../models/Payment');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const { createRazorpayOrder, verifyPaymentSignature, verifyWebhookSignature } = require('../services/paymentService');
+const { broadcastOrder, isVisibleToAdmin } = require('./orderController');
 
 const isRazorpayConfigured = () => Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
 
@@ -56,7 +57,6 @@ const verifyPayment = asyncHandler(async (req, res) => {
   const user = await getAuthenticatedUser(req);
   if (!user) return error(res, 401, 'Login required for payment verification');
 
-  // Razorpay Checkout returns snake_case fields. Accept camelCase too for API clients.
   const body = req.body || {};
   const razorpayOrderId = body.razorpayOrderId || body.razorpay_order_id;
   const razorpayPaymentId = body.razorpayPaymentId || body.razorpay_payment_id;
@@ -73,12 +73,24 @@ const verifyPayment = asyncHandler(async (req, res) => {
   const verified = verifyPaymentSignature({ razorpayOrderId, razorpayPaymentId, razorpaySignature });
   if (!verified) {
     await Payment.updateOne({ _id: payment._id }, { status: 'failed', razorpayPaymentId, razorpaySignature });
+    if (payment.order) await Order.updateOne({ _id: payment.order }, { paymentStatus: 'failed' });
     return error(res, 400, 'Invalid payment signature');
   }
 
-  await Payment.updateOne({ _id: payment._id }, { status: 'paid', razorpayPaymentId, razorpaySignature });
-  await Order.updateOne({ _id: payment.order }, { paymentStatus: 'paid' });
-  return success(res, 200, { verified: true }, 'Payment verified');
+  const updatedPayment = await Payment.findOneAndUpdate(
+    { _id: payment._id, status: { $ne: 'paid' } },
+    { status: 'paid', razorpayPaymentId, razorpaySignature },
+    { new: true }
+  );
+
+  const paidPayment = updatedPayment || await Payment.findById(payment._id);
+  if (paidPayment?.order) {
+    const order = await Order.findByIdAndUpdate(payment.order, { paymentStatus: 'paid' }, { new: true }).populate('user', 'name email phone role');
+    if (order && isVisibleToAdmin(order)) broadcastOrder(order, 'new-order');
+    return success(res, 200, { verified: true, orderId: order?._id, orderCode: order?.code }, 'Payment verified');
+  }
+
+  return error(res, 500, 'Payment verified but no order is associated with this payment');
 });
 
 const handleWebhook = asyncHandler(async (req, res) => {
@@ -97,7 +109,10 @@ const handleWebhook = asyncHandler(async (req, res) => {
   const status = event === 'payment.captured' || event === 'payment.authorized' ? 'paid' : event === 'payment.failed' ? 'failed' : null;
   if (status) {
     const payment = await Payment.findOneAndUpdate({ razorpayOrderId }, { status, razorpayPaymentId: entity.id }, { new: true });
-    if (payment) await Order.updateOne({ _id: payment.order }, { paymentStatus: status });
+    if (payment?.order) {
+      const order = await Order.findOneAndUpdate({ _id: payment.order }, { paymentStatus: status }, { new: true }).populate('user', 'name email phone role');
+      if (order && status === 'paid' && isVisibleToAdmin(order)) broadcastOrder(order, 'new-order');
+    }
   }
   return res.status(200).json({ success: true });
 });
