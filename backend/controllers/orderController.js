@@ -25,6 +25,10 @@ function broadcastOrder(order, type = 'order-updated') {
   }
 }
 
+function isVisibleToAdmin(order) {
+  return order.paymentMethod !== 'online' || order.paymentStatus === 'paid';
+}
+
 function calculateDiscount(coupon, subtotal) {
   let discount = coupon.type === 'percentage' ? subtotal * (coupon.value / 100) : coupon.value;
   if (coupon.maxDiscount != null) discount = Math.min(discount, coupon.maxDiscount);
@@ -103,12 +107,14 @@ const createOrder = asyncHandler(async (req, res) => {
     );
   }
 
-  broadcastOrder(order, 'new-order');
+  // Never broadcast an unpaid online order to the admin dashboard.
+  if (isVisibleToAdmin(order)) broadcastOrder(order, 'new-order');
   return success(res, 201, order, 'Order created successfully');
 });
 
 const getOrders = asyncHandler(async (_req, res) => {
-  const orders = await Order.find().populate('user', 'name email phone role').sort('-createdAt');
+  // Online orders are visible to admins only after payment has been verified.
+  const orders = await Order.find({ $or: [{ paymentMethod: { $ne: 'online' } }, { paymentMethod: 'online', paymentStatus: 'paid' }] }).populate('user', 'name email phone role').sort('-createdAt');
   return success(res, 200, orders, 'Orders retrieved');
 });
 
@@ -118,6 +124,7 @@ const getOrderById = asyncHandler(async (req, res) => {
   if (req.user) {
     const isOwner = order.user && String(order.user._id) === String(req.user.id);
     if (!isOwner && req.user.role !== 'admin') return error(res, 403, 'Not authorized to view this order');
+    if (req.user.role === 'admin' && !isVisibleToAdmin(order)) return error(res, 404, 'Order not found');
   }
   return success(res, 200, order, 'Order retrieved');
 });
@@ -128,12 +135,14 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   if (!validStatuses.includes(orderStatus)) return error(res, 400, 'Invalid order status');
   const order = await Order.findByIdAndUpdate(req.params.id, { orderStatus }, { new: true, runValidators: true }).populate('user', 'name email phone role');
   if (!order) return error(res, 404, 'Order not found');
+  if (!isVisibleToAdmin(order)) return error(res, 400, 'Online payment is not verified yet');
   broadcastOrder(order, 'order-updated');
   return success(res, 200, order, 'Order status updated');
 });
 
 const getMyOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ user: req.user.id }).sort('-createdAt');
+  // Do not show abandoned/unpaid online checkout attempts as customer orders.
+  const orders = await Order.find({ user: req.user.id, $or: [{ paymentMethod: { $ne: 'online' } }, { paymentMethod: 'online', paymentStatus: 'paid' }] }).sort('-createdAt');
   return success(res, 200, orders, 'User orders retrieved');
 });
 
@@ -141,6 +150,7 @@ const subscribeToOrder = asyncHandler(async (req, res) => {
   const orderId = req.params.id;
   const order = await Order.findById(orderId).populate('user', 'name email phone role');
   if (!order) return error(res, 404, 'Order not found');
+  if (req.user?.role === 'admin' && !isVisibleToAdmin(order)) return error(res, 404, 'Order not found');
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
@@ -164,10 +174,10 @@ const subscribeToAdminOrders = asyncHandler(async (_req, res) => {
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders?.();
   adminSubscribers.add(res);
-  const orders = await Order.find().populate('user', 'name email phone role').sort('-createdAt');
+  const orders = await Order.find({ $or: [{ paymentMethod: { $ne: 'online' } }, { paymentMethod: 'online', paymentStatus: 'paid' }] }).populate('user', 'name email phone role').sort('-createdAt');
   for (const order of orders) sendSSE(res, { type: 'initial-order', order });
   const heartbeat = setInterval(() => { if (!res.writableEnded) res.write(': heartbeat\n\n'); }, 25000);
   _req.on('close', () => { clearInterval(heartbeat); adminSubscribers.delete(res); });
 });
 
-module.exports = { createOrder, getOrders, getOrderById, updateOrderStatus, getMyOrders, subscribeToOrder, subscribeToAdminOrders };
+module.exports = { createOrder, getOrders, getOrderById, updateOrderStatus, getMyOrders, subscribeToOrder, subscribeToAdminOrders, broadcastOrder, isVisibleToAdmin };
