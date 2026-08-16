@@ -52,4 +52,11 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Abandoned online checkout records are temporary and must not live forever.
+// Paid online orders and all COD orders are never affected by this TTL index.
+orderSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 1800, partialFilterExpression: { paymentMethod: 'online', paymentStatus: 'pending' } },
+);
+
 module.exports = mongoose.model('Order', orderSchema);
