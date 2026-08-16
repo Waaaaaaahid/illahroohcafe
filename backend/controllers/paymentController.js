@@ -40,7 +40,7 @@ const createPaymentOrder = asyncHandler(async (req, res) => {
     );
   }
 
-  const { orderId, amount } = req.body || {};
+  const { orderId } = req.body || {};
   const order = await Order.findById(orderId);
   if (!order) return error(res, 404, 'Order not found');
   if (String(order.user) !== String(user._id) && user.role !== 'admin') {
@@ -52,15 +52,14 @@ const createPaymentOrder = asyncHandler(async (req, res) => {
   if (order.paymentStatus === 'paid') return error(res, 400, 'Order is already paid');
 
   const orderAmount = Number(order.totalAmount);
-  const requestedAmount = amount === undefined ? orderAmount : Number(amount);
-  if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+  if (!Number.isFinite(orderAmount) || orderAmount <= 0) {
     return error(res, 400, 'Invalid order amount');
   }
 
   let razorpayOrder;
   try {
     razorpayOrder = await createRazorpayOrder({
-      amount: requestedAmount,
+      amount: orderAmount,
       currency: order.currency || 'INR',
       receipt: `order_${order.code || order._id}`,
     });
@@ -87,6 +86,7 @@ const createPaymentOrder = asyncHandler(async (req, res) => {
     res,
     200,
     {
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID,
       razorpayOrderId: payment.razorpayOrderId,
       amount: payment.amount,
       currency: payment.currency,
@@ -194,7 +194,6 @@ const getPayments = asyncHandler(async (_req, res) => {
     .sort('-createdAt')
     .limit(100);
 
-  // Keep the frontend payload flat: order -> its human-readable code.
   const serialized = payments.map((payment) => {
     const data = payment.toObject();
     data.order = data.order?.code || data.order?._id || data.order;
