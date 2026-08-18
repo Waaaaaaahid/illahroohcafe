@@ -5,9 +5,9 @@ import type { CafeSettings } from "@/lib/types";
 
 /** Neutral fallback while settings load (real values come from the backend). */
 const FALLBACK_SETTINGS: CafeSettings = {
-  name: "Ilarooh",
+  name: "IlaahRooh",
   logo: "",
-  description: "",
+  description: "Taste that reaches your soul",
   phone: "",
   email: "",
   address: "",
