@@ -1,8 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, LogOut, Menu as MenuIcon, ShoppingBag, User, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu as MenuIcon, Search, ShoppingBag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NAV_LINKS } from "@/constants";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/AppButton";
@@ -20,64 +19,29 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
   useEffect(() => setMobileOpen(false), [pathname]);
 
+  const links = [{ label: "Home", to: "/" }, { label: "Shop all", to: "/menu" }, { label: "New arrivals", to: "/menu" }, { label: "Our story", to: "/about" }];
+
   return (
-    <header className={`site-navbar sticky top-0 z-50 transition-all duration-300 ${scrolled ? "site-navbar-scrolled" : ""}`}>
-      <nav className="container-page flex h-[74px] items-center justify-between gap-4">
-        <Link to="/" className="group flex items-center gap-3">
-          <span className="brand-script text-4xl leading-none text-[#c81019] transition-transform duration-300 group-hover:scale-[1.02] sm:text-[2.65rem]">IlaahRooh</span>
+    <header className={`sticky top-0 z-50 border-b border-[#e9e8e1] bg-[#fbfaf7]/95 backdrop-blur-xl transition-all duration-300 ${scrolled ? "shadow-[0_8px_28px_rgba(30,32,26,.06)]" : ""}`}>
+      <nav className="mx-auto flex h-[70px] max-w-[1440px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-14">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Zrcart home">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#252720] text-white"><ShoppingBag className="h-4 w-4" /></span>
+          <span className="text-[1.65rem] font-bold tracking-[-.075em] text-[#252720]">zr<span className="text-[#78866b]">cart</span><span className="ml-1 align-top text-[8px] font-semibold tracking-[.2em] text-[#8b8c83]">®</span></span>
         </Link>
-
-        <ul className="hidden items-center gap-1 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <li key={link.to}>
-              <Link
-                to={link.to}
-                activeOptions={{ exact: link.to === "/" }}
-                className="site-nav-link rounded-full px-4 py-2 text-sm font-bold transition-all"
-                activeProps={{ className: "site-nav-link site-nav-link-active rounded-full px-4 py-2 text-sm font-bold" }}
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
-          {isAdmin ? <li><Link to="/admin" className="site-admin-link flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold"><LayoutDashboard className="size-4" /> Admin</Link></li> : null}
-        </ul>
-
+        <div className="hidden items-center gap-1 lg:flex">
+          {links.map((link, i) => <Link key={link.label} to={link.to} activeOptions={{ exact: link.to === "/" }} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${pathname === link.to ? "bg-[#e9ede3] text-[#343e2f]" : "text-[#65665e] hover:bg-white hover:text-[#252720]"}`}>{link.label}</Link>)}
+          {isAdmin ? <Link to="/admin" className="flex items-center gap-1.5 rounded-full bg-[#e9ede3] px-4 py-2 text-xs font-semibold text-[#343e2f]"><LayoutDashboard className="h-4 w-4" /> Admin</Link> : null}
+        </div>
         <div className="flex items-center gap-1 sm:gap-2">
-          <button type="button" onClick={openCart} aria-label={`Open cart, ${count} items`} className="site-icon-btn relative rounded-full p-2.5 transition-all">
-            <ShoppingBag className="size-5" />
-            <AnimatePresence>{count > 0 ? <motion.span key={count} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.4, opacity: 0 }} className="absolute -right-0.5 -top-0.5 flex min-w-5 items-center justify-center rounded-full bg-[#c81019] px-1.5 py-0.5 text-[0.65rem] font-bold text-white">{count}</motion.span> : null}</AnimatePresence>
-          </button>
-
-          {user ? (
-            <div className="hidden items-center gap-2 sm:flex">
-              <Link to="/profile"><Button variant="outline" size="sm" className="rounded-full border-[#e8cfd0] text-[#a20c14] hover:bg-[#fff3f3]"><User className="size-4" /> {user.name.split(" ")[0]}</Button></Link>
-              <button type="button" onClick={logout} aria-label="Log out" className="site-icon-btn rounded-full p-2.5"><LogOut className="size-4" /></button>
-            </div>
-          ) : <Link to="/login" className="hidden sm:block"><Button size="sm" className="rounded-full bg-[#c81019] px-5 font-bold text-white shadow-sm hover:bg-[#a90d15]">Sign in</Button></Link>}
-
-          <button type="button" onClick={() => setMobileOpen((open) => !open)} aria-label="Toggle navigation menu" aria-expanded={mobileOpen} className="site-icon-btn rounded-full p-2.5 lg:hidden">
-            <AnimatePresence mode="wait" initial={false}><motion.span key={mobileOpen ? "close" : "open"} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.18 }} className="block">{mobileOpen ? <X className="size-5" /> : <MenuIcon className="size-5" />}</motion.span></AnimatePresence>
-          </button>
+          <Link to="/menu" aria-label="Search products" className="hidden h-10 w-10 items-center justify-center rounded-full text-[#55574f] transition hover:bg-white sm:flex"><Search className="h-[18px] w-[18px]" /></Link>
+          <button type="button" onClick={openCart} aria-label={`Open cart, ${count} items`} className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#34352e] transition hover:bg-white"><ShoppingBag className="h-[18px] w-[18px]" />{count > 0 ? <span className="absolute right-0 top-0 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#78866b] px-1 text-[9px] font-bold text-white">{count}</span> : null}</button>
+          {user ? <div className="hidden items-center gap-2 sm:flex"><Link to="/profile"><Button variant="outline" size="sm" className="rounded-full border-[#d9dcd2] text-[#34352e]"><User className="h-4 w-4" /> {user.name.split(" ")[0]}</Button></Link><button type="button" onClick={logout} aria-label="Log out" className="flex h-10 w-10 items-center justify-center rounded-full text-[#55574f] hover:bg-white"><LogOut className="h-4 w-4" /></button></div> : <Link to="/login" className="hidden sm:block"><Button size="sm" className="rounded-full bg-[#252720] px-5 text-xs font-semibold text-white hover:bg-[#4c5845]">Sign in</Button></Link>}
+          <button type="button" onClick={() => setMobileOpen((open) => !open)} aria-label="Toggle navigation menu" aria-expanded={mobileOpen} className="flex h-10 w-10 items-center justify-center rounded-full text-[#34352e] hover:bg-white lg:hidden">{mobileOpen ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}</button>
         </div>
       </nav>
-
-      <AnimatePresence>
-        {mobileOpen ? (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden border-t border-[#f0dddd] bg-white lg:hidden">
-            <ul className="container-page flex flex-col gap-1 py-4">
-              {NAV_LINKS.map((link) => <li key={link.to}><Link to={link.to} className="mobile-nav-link block rounded-xl px-4 py-3 text-base font-bold">{link.label}</Link></li>)}
-              {isAdmin ? <li><Link to="/admin" className="mobile-nav-link block rounded-xl px-4 py-3 text-base font-bold text-[#c81019]">Admin dashboard</Link></li> : null}
-              <li className="mt-2 flex gap-3 px-1">
-                {user ? <><Link to="/profile" className="flex-1"><Button variant="outline" className="w-full rounded-xl">Profile</Button></Link><Button variant="subtle" onClick={logout}>Log out</Button></> : <><Link to="/login" className="flex-1"><Button className="w-full rounded-xl bg-[#c81019]">Sign in</Button></Link><Link to="/register" className="flex-1"><Button variant="outline" className="w-full rounded-xl">Register</Button></Link></>}
-              </li>
-            </ul>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <AnimatePresence>{mobileOpen ? <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .22 }} className="overflow-hidden border-t border-[#e9e8e1] bg-[#fbfaf7] lg:hidden"><ul className="mx-auto flex max-w-[1440px] flex-col gap-1 px-5 py-4 sm:px-8">{links.map((link) => <li key={link.label}><Link to={link.to} className="block rounded-xl px-4 py-3 text-sm font-semibold text-[#45473f] hover:bg-[#e9ede3]">{link.label}</Link></li>)}{isAdmin ? <li><Link to="/admin" className="block rounded-xl px-4 py-3 text-sm font-semibold text-[#45473f] hover:bg-[#e9ede3]">Admin dashboard</Link></li> : null}<li className="mt-2 flex gap-2">{user ? <><Link to="/profile" className="flex-1"><Button variant="outline" className="w-full rounded-xl">Profile</Button></Link><Button variant="subtle" onClick={logout}>Log out</Button></> : <><Link to="/login" className="flex-1"><Button className="w-full rounded-xl bg-[#252720]">Sign in</Button></Link><Link to="/register" className="flex-1"><Button variant="outline" className="w-full rounded-xl">Create account</Button></Link></>}</li></ul></motion.div> : null}</AnimatePresence>
     </header>
   );
 }
