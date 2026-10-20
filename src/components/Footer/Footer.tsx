@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Instagram, Mail, MapPin, Phone, ShoppingBag } from "lucide-react";
+import { ArrowUpRight, Instagram, MapPin, ShoppingBag } from "lucide-react";
 
 export function Footer() {
   return (
