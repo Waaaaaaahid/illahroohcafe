@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useState, type FormEvent } from "react";
-import { Coffee } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/AppButton";
 import { Field, TextInput } from "@/components/ui/Field";
 import { useAuth } from "@/context/AuthContext";
@@ -11,9 +11,9 @@ import { validateLogin, type FieldErrors, type LoginForm } from "@/utils/validat
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Sign in — Ilarooh" },
-      { name: "description", content: "Sign in to your Ilarooh account to order, track deliveries and view past orders." },
-      { property: "og:title", content: "Sign in to Ilarooh" },
+      { title: "Sign in — Zrcart" },
+      { name: "description", content: "Sign in to your Zrcart account to order, track deliveries and view past orders." },
+      { property: "og:title", content: "Sign in to Zrcart" },
       { property: "og:description", content: "Access your orders, addresses and rewards." },
     ],
   }),
@@ -110,18 +110,18 @@ export function AuthLayout({
   footer?: React.ReactNode;
 }) {
   return (
-    <div className="container-page flex min-h-[80vh] items-center justify-center py-16">
+    <div className="container-page flex min-h-[80vh] items-center justify-center bg-[#f7f7f1] px-4 py-12 sm:py-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md rounded-[2rem] border border-border bg-card p-8 shadow-lift sm:p-10"
+        className="w-full max-w-md rounded-[2rem] border border-[#e4e7dc] bg-white p-7 shadow-[0_24px_70px_rgba(43,55,35,0.10)] sm:p-10"
       >
         <span className="flex size-11 items-center justify-center rounded-2xl bg-amber-gradient text-accent-foreground">
           <Coffee className="size-5" />
         </span>
-        <h1 className="mt-6 font-display text-3xl font-semibold">{title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-[#20291f]">{title}</h1>
+        <p className="mt-2 text-sm leading-6 text-[#737b6d]">{subtitle}</p>
         <div className="mt-8">{children}</div>
         {footer ? <p className="mt-6 text-center text-sm text-muted-foreground">{footer}</p> : null}
       </motion.div>
