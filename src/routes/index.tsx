@@ -1,54 +1,85 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import { ArrowRight, ChefHat, Leaf, Sparkles, Star, Timer } from "lucide-react";
-import { Hero } from "@/components/Hero/Hero";
-import { MenuCard } from "@/components/MenuCard/MenuCard";
-import { MenuGridSkeleton, ErrorState } from "@/components/Loading/Loading";
-import { Button } from "@/components/ui/AppButton";
-import { menuService } from "@/services/menuService";
-import { reviewService } from "@/services/reviewService";
-import { useCafe } from "@/context/CafeContext";
+import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, Heart, Search, ShieldCheck, ShoppingBag, Sparkles, Truck, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [
-    { title: "IlaahRooh — Slow-craft coffee house & kitchen in Bandra" },
-    { name: "description", content: "Single-origin coffee, stone-baked pizza and patisserie, delivered in 25 minutes. Order online from IlaahRooh, Bandra West." },
-    { property: "og:title", content: "IlaahRooh — Coffee worth slowing down for" },
-    { property: "og:description", content: "Order single-origin coffee and kitchen plates from IlaahRooh, Bandra West." },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Zrcart — Everyday finds. Better prices." },
+      { name: "description", content: "Discover thoughtful everyday essentials, home finds, accessories and more at Zrcart." },
+      { property: "og:title", content: "Zrcart — Everyday finds. Better prices." },
+      { property: "og:description", content: "Shop useful finds for your everyday life." },
+    ],
+  }),
   component: HomePage,
 });
 
-const WHY_US = [
-  { title: "Fresh Ingredients", description: "Produce sourced each morning from local farms.", icon: Leaf },
-  { title: "Fast Service", description: "Average delivery in 25 minutes across the neighbourhood.", icon: Timer },
-  { title: "Premium Taste", description: "Recipes developed by chefs with fine-dining pedigree.", icon: Sparkles },
-  { title: "Hygienic Kitchen", description: "FSSAI certified, audited every quarter.", icon: ChefHat },
+const categories = [
+  { name: "Home & Kitchen", note: "Small upgrades, big difference", image: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=85" },
+  { name: "Tech Accessories", note: "Smart little essentials", image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=900&q=85" },
+  { name: "Beauty & Care", note: "Your daily routine", image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=85" },
+  { name: "Everyday Utility", note: "Made for real life", image: "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=900&q=85" },
 ];
 
-function HomePage() {
-  const { settings } = useCafe();
-  const menuQuery = useQuery({ queryKey: ["menu"], queryFn: menuService.list });
-  const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: menuService.categories });
-  const reviewsQuery = useQuery({ queryKey: ["featured-reviews"], queryFn: reviewService.listFeatured });
-  const featured = (menuQuery.data ?? []).filter((item) => item.popular).slice(0, 4);
-  const reviews = (reviewsQuery.data ?? []).slice(0, 3);
+const products = [
+  { name: "Minimal Desk Lamp", category: "Home & Living", price: 699, oldPrice: 999, rating: "4.8", reviews: 124, badge: "BESTSELLER", image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=85" },
+  { name: "Everyday Wireless Earbuds", category: "Tech Accessories", price: 1299, oldPrice: 1799, rating: "4.6", reviews: 86, badge: "TRENDING", image: "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=900&q=85" },
+  { name: "Daily Care Essentials Set", category: "Beauty & Care", price: 449, oldPrice: 599, rating: "4.7", reviews: 203, badge: "POPULAR", image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=85" },
+  { name: "Compact Travel Organizer", category: "Everyday Utility", price: 349, oldPrice: 499, rating: "4.5", reviews: 61, badge: "GREAT VALUE", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=85" },
+];
 
-  return <>
-    <Hero />
-    <section className="container-page section-padding"><SectionHeading eyebrow="Guest favourites" title="The plates people come back for" action={<Link to="/menu"><Button variant="outline" size="sm">Full menu <ArrowRight className="size-4" /></Button></Link>} />
-      {menuQuery.isLoading ? <MenuGridSkeleton count={4} /> : menuQuery.isError ? <ErrorState onRetry={() => void menuQuery.refetch()} /> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{featured.map((item, index) => <MenuCard key={item._id} item={item} index={index} />)}</div>}
-    </section>
-    <section className="bg-secondary/45"><div className="container-page section-padding"><SectionHeading eyebrow="Explore" title="Browse by category" />{categoriesQuery.isLoading ? <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{Array.from({ length: 7 }).map((_, index) => <div key={index} className="skeleton aspect-square rounded-3xl" />)}</div> : <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{(categoriesQuery.data ?? []).map((category, index) => <motion.div key={category._id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.45, delay: index * 0.04 }}><Link to="/menu" search={{ category: category.slug }} className="group relative block aspect-square overflow-hidden rounded-3xl shadow-soft"><img src={category.image} alt={category.name} loading="lazy" className="size-full object-cover transition-transform duration-700 group-hover:scale-110" /><div className="absolute inset-0 bg-image-overlay" /><div className="absolute inset-x-0 bottom-0 p-4"><p className="font-display text-lg font-semibold text-primary-foreground">{category.name}</p><p className="line-clamp-1 text-xs text-primary-foreground/70">{category.description}</p></div></Link></motion.div>)}</div>}</div></section>
-    <section className="container-page section-padding"><SectionHeading eyebrow="Why IlaahRooh" title="Built on four non-negotiables" /><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{WHY_US.map((feature, index) => <motion.div key={feature.title} initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.5, delay: index * 0.06 }} className="rounded-3xl border border-border bg-card p-7 shadow-soft transition-shadow hover:shadow-lift"><span className="flex size-12 items-center justify-center rounded-2xl bg-amber-gradient text-accent-foreground"><feature.icon className="size-5" /></span><h3 className="mt-5 text-lg font-semibold">{feature.title}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.description}</p></motion.div>)}</div></section>
-    <section className="bg-secondary/45"><div className="container-page section-padding grid gap-12 lg:grid-cols-2 lg:items-center"><div className="grid grid-cols-2 gap-4"><img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=700&q=80" alt="Cafe interior with warm lighting" loading="lazy" className="aspect-3/4 w-full rounded-3xl object-cover shadow-soft" /><img src="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=700&q=80" alt="Barista preparing coffee" loading="lazy" className="mt-10 aspect-3/4 w-full rounded-3xl object-cover shadow-soft" /></div><div><span className="eyebrow text-accent">Our story</span><h2 className="mt-4 font-display text-3xl font-semibold sm:text-4xl">A room built for lingering</h2><p className="mt-5 leading-relaxed text-muted-foreground">We opened in 2016 with one espresso machine and a stone oven. A decade later the oven is still here, the roast is still single-origin, and every plate still leaves the pass by hand.</p><p className="mt-4 leading-relaxed text-muted-foreground">Whether you sit with us on Waterfield Road or order to your door, you get the same kitchen, the same beans, the same care.</p><Link to="/about" className="mt-8 inline-block"><Button variant="outline">More about us <ArrowRight className="size-4" /></Button></Link></div></div></section>
-    <section className="container-page section-padding"><SectionHeading eyebrow="Guest book" title="What people say" />{reviewsQuery.isLoading ? <div className="grid gap-6 md:grid-cols-3"><div className="skeleton h-52 rounded-3xl" /><div className="skeleton h-52 rounded-3xl" /><div className="skeleton h-52 rounded-3xl" /></div> : reviews.length === 0 ? <div className="rounded-3xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">Guest reviews will appear here soon.</div> : <div className="grid gap-6 md:grid-cols-3">{reviews.map((review, index) => { const name = review.authorName || review.user?.name || "Guest"; const role = review.authorRole || (review.source === "customer" ? "Verified guest" : "Guest"); return <motion.figure key={review._id} initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.5, delay: index * 0.08 }} className="flex flex-col rounded-3xl border border-border bg-card p-7 shadow-soft"><div className="flex gap-0.5">{Array.from({ length: review.rating }).map((_, starIndex) => <Star key={starIndex} className="size-4 fill-accent text-accent" />)}</div><blockquote className="mt-5 flex-1 text-sm leading-relaxed text-muted-foreground">“{review.comment}”</blockquote><figcaption className="mt-6 border-t border-border pt-4"><p className="text-sm font-semibold">{name}</p><p className="text-xs text-muted-foreground">{role}</p></figcaption></motion.figure>; })}</div>}</section>
-    <section className="container-page pb-20"><div className="grid overflow-hidden rounded-[2rem] border border-border bg-card shadow-soft lg:grid-cols-2"><div className="p-8 sm:p-12"><span className="eyebrow text-accent">Find us</span><h2 className="mt-4 font-display text-3xl font-semibold">{settings.address}</h2><ul className="mt-6 space-y-2 text-sm text-muted-foreground">{settings.openingHours.map((entry) => <li key={entry.day} className="flex justify-between gap-6 border-b border-border pb-2"><span>{entry.day}</span><span className="font-medium text-foreground">{entry.hours}</span></li>)}</ul><div className="mt-8 flex flex-wrap gap-3"><Link to="/contact"><Button>Contact us</Button></Link><a href={`tel:${settings.phone}`}><Button variant="outline">Call {settings.phone}</Button></a></div></div><div className="relative min-h-64 bg-secondary"><iframe title="IlaahRooh location map" src="https://www.google.com/maps?q=28.562712,77.290247&z=16&output=embed" className="absolute inset-0 size-full border-0" loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" /></div></div></section>
-    <section className="container-page pb-24"><div className="relative overflow-hidden rounded-[2rem] bg-hero-gradient px-8 py-14 text-center text-primary-foreground sm:px-14"><div className="pointer-events-none absolute -bottom-24 -left-16 size-72 rounded-full bg-accent/25 blur-3xl" /><h2 className="relative font-display text-3xl font-semibold sm:text-4xl">Hungry already?</h2><p className="relative mx-auto mt-4 max-w-lg text-primary-foreground/75">Your table is ready — or your doorstep is. Order in under two minutes.</p><div className="relative mt-8 flex flex-wrap justify-center gap-3"><Link to="/menu"><Button variant="accent" size="lg">Order Now <ArrowRight className="size-4" /></Button></Link><Link to="/contact"><Button variant="glass" size="lg">Book a table</Button></Link></div></div></section>
-  </>;
+function ProductCard({ product }: { product: (typeof products)[number] }) {
+  return (
+    <article className="group min-w-0">
+      <div className="relative aspect-[4/4.6] overflow-hidden rounded-2xl bg-[#f4f3ef]">
+        <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+        <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[9px] font-bold tracking-[.14em] text-[#242424]">{product.badge}</span>
+        <button aria-label={`Save ${product.name} to wishlist`} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#282828] transition hover:bg-white"><Heart className="h-4 w-4" /></button>
+        <Link to="/menu" aria-label={`View ${product.name}`} className="absolute bottom-3 right-3 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[#20211e] text-white opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100"><ArrowUpRight className="h-4 w-4" /></Link>
+      </div>
+      <div className="pt-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[.15em] text-[#85857d]">{product.category}</p>
+        <div className="mt-1.5 flex items-start justify-between gap-2"><h3 className="text-sm font-semibold leading-5 text-[#242521] sm:text-base">{product.name}</h3><span className="shrink-0 text-xs text-[#62645c]">★ {product.rating}</span></div>
+        <div className="mt-2 flex items-center gap-2"><span className="text-sm font-bold text-[#242521]">₹{product.price.toLocaleString("en-IN")}</span><span className="text-xs text-[#96968e] line-through">₹{product.oldPrice.toLocaleString("en-IN")}</span><span className="text-[10px] font-bold text-[#4e7255]">{Math.round((1 - product.price / product.oldPrice) * 100)}% OFF</span></div>
+      </div>
+    </article>
+  );
 }
 
-function SectionHeading({ eyebrow, title, action }: { eyebrow: string; title: string; action?: React.ReactNode }) {
-  return <div className="mb-10 flex flex-wrap items-end justify-between gap-4"><div><span className="eyebrow text-accent">{eyebrow}</span><h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">{title}</h2></div>{action}</div>;
+function HomePage() {
+  return (
+    <div className="bg-[#fbfaf7] text-[#242521]">
+      <div className="bg-[#22231f] px-4 py-2.5 text-center text-[10px] font-semibold tracking-[.15em] text-white sm:text-[11px]">A LITTLE SOMETHING BETTER, EVERY DAY <span className="mx-2 text-[#c9d4b8]">✳</span> SHOP SMART WITH ZRCART</div>
+      <section className="mx-auto grid max-w-[1440px] gap-8 px-5 pb-12 pt-8 sm:px-8 sm:pb-16 sm:pt-12 lg:grid-cols-[1fr_.92fr] lg:items-center lg:gap-12 lg:px-14 lg:pt-14">
+        <div className="order-2 pb-3 lg:order-1 lg:pb-8">
+          <div className="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.22em] text-[#6e7c62]"><Sparkles className="h-4 w-4" /> Curated for everyday living</div>
+          <h1 className="max-w-2xl text-[clamp(3.2rem,7.4vw,6.6rem)] font-medium leading-[.94] tracking-[-.075em]">Good finds.<br /><span className="font-serif italic font-normal text-[#738367]">Better everyday.</span></h1>
+          <p className="mt-6 max-w-md text-sm leading-7 text-[#73746c] sm:text-base">Useful little upgrades for your home, your routine and everything in between. Thoughtfully picked. Easy on your pocket.</p>
+          <div className="mt-8 flex flex-wrap items-center gap-3"><Link to="/menu" className="inline-flex items-center gap-3 rounded-full bg-[#242521] px-6 py-3.5 text-xs font-semibold text-white transition hover:bg-[#4c5845]">Explore the collection <ArrowRight className="h-4 w-4" /></Link><a href="#categories" className="inline-flex items-center gap-2 rounded-full border border-[#d9d9d0] px-6 py-3.5 text-xs font-semibold text-[#35362f] transition hover:bg-white">Browse categories</a></div>
+          <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 border-t border-[#e7e6df] pt-6 text-[10px] font-semibold tracking-wide text-[#686a61] sm:mt-14"><span className="flex items-center gap-2"><Truck className="h-4 w-4 text-[#718266]" /> Delivery across India</span><span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#718266]" /> Secure checkout</span><span className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#718266]" /> Curated quality</span></div>
+        </div>
+        <div className="order-1 relative min-h-[340px] overflow-hidden rounded-[1.6rem] bg-[#e8e7dd] sm:min-h-[470px] lg:order-2 lg:min-h-[590px]">
+          <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1600&q=90" alt="Calm, modern home with carefully chosen everyday objects" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/5" />
+          <div className="absolute left-5 top-5 rounded-full border border-white/60 bg-white/75 px-4 py-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#30332c] backdrop-blur-sm sm:left-7 sm:top-7">The everyday edit · 01</div>
+          <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4 text-white sm:bottom-8 sm:left-8 sm:right-8"><div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-white/75">Small things, considered</p><h2 className="mt-2 max-w-sm font-serif text-3xl italic leading-tight sm:text-4xl">Make room for better.</h2></div><Link to="/menu" aria-label="Shop the collection" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[#242521] transition hover:scale-105"><ArrowUpRight className="h-5 w-5" /></Link></div>
+        </div>
+      </section>
+
+      <section id="categories" className="border-y border-[#e9e8e1] bg-white py-12 sm:py-16">
+        <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-14">
+          <div className="mb-7 flex items-end justify-between gap-4 sm:mb-9"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#78856c]">Shop by mood</p><h2 className="mt-2 text-2xl font-medium tracking-[-.04em] sm:text-3xl">Find your kind of useful.</h2></div><Link to="/menu" className="hidden items-center gap-1 text-xs font-semibold sm:flex">All categories <ChevronRight className="h-4 w-4" /></Link></div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{categories.map((category, i) => <Link to="/menu" key={category.name} className="group"><div className="relative aspect-[.92] overflow-hidden rounded-xl bg-[#eeede7] sm:rounded-2xl"><img src={category.image} alt={category.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" /><span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[10px] font-bold text-[#34352e] sm:left-4 sm:top-4">{String(i + 1).padStart(2, "0")}</span><div className="absolute inset-x-3 bottom-3 text-white sm:inset-x-4 sm:bottom-4"><h3 className="text-sm font-semibold sm:text-lg">{category.name}</h3><p className="mt-1 text-[10px] text-white/80 sm:text-xs">{category.note}</p></div></div></Link>)}</div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-20 lg:px-14">
+        <div className="mb-8 flex items-end justify-between gap-4 sm:mb-10"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#78856c]">A good place to start</p><h2 className="mt-2 text-2xl font-medium tracking-[-.04em] sm:text-3xl">The things everyone's loving.</h2><p className="mt-2 text-xs text-[#85867e] sm:text-sm">A preview of the Zrcart collection.</p></div><Link to="/menu" className="flex shrink-0 items-center gap-1 text-xs font-semibold">Shop all <ArrowRight className="h-4 w-4" /></Link></div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.name} product={product} />)}</div>
+      </section>
+
+      <section className="mx-5 mb-14 overflow-hidden rounded-2xl bg-[#e9ede3] sm:mx-8 sm:mb-20 lg:mx-auto lg:max-w-[1352px]">
+        <div className="grid items-center gap-8 px-6 py-10 sm:px-10 sm:py-14 lg:grid-cols-[1fr_auto] lg:px-16"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#6b7d5d]">The Zrcart promise</p><h2 className="mt-3 max-w-2xl text-3xl font-medium leading-tight tracking-[-.05em] sm:text-4xl">Less scrolling. Better finds. <span className="font-serif italic font-normal text-[#718265]">More living.</span></h2><p className="mt-4 max-w-lg text-sm leading-6 text-[#6c7065]">We're building a collection of practical, good-looking things that make everyday life feel a little easier.</p></div><Link to="/menu" className="inline-flex w-fit items-center gap-3 rounded-full bg-[#242521] px-6 py-3.5 text-xs font-semibold text-white transition hover:bg-[#4c5845]">Discover Zrcart <ArrowRight className="h-4 w-4" /></Link></div>
+      </section>
+    </div>
+  );
 }
