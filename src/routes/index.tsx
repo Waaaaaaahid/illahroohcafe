@@ -27,7 +27,7 @@ function ProductCard({ product, categoryName }: { product: MenuItem; categoryNam
     <Link to="/menu" className="block">
       <div className="relative aspect-[4/4.6] overflow-hidden rounded-2xl bg-[#f4f3ef]">
         <img src={product.image || productFallbackImage} alt={product.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
-        {product.popular ? <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[9px] font-bold tracking-[.14em] text-[#242424]">FEATURED</span> : null}
+        {product.badge || product.popular ? <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[9px] font-bold tracking-[.14em] text-[#242424]">{product.badge || "FEATURED"}</span> : null}
         {!product.available ? <span className="absolute right-3 top-3 rounded-full bg-black/70 px-3 py-1.5 text-[9px] font-bold text-white">SOLD OUT</span> : null}
       </div>
       <div className="pt-4">
