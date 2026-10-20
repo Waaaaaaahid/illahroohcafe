@@ -31,7 +31,7 @@ export function Navbar() {
           <span className="text-[1.65rem] font-bold tracking-[-.075em] text-[#252720]">zr<span className="text-[#78866b]">cart</span><span className="ml-1 align-top text-[8px] font-semibold tracking-[.2em] text-[#8b8c83]">®</span></span>
         </Link>
         <div className="hidden items-center gap-1 lg:flex">
-          {links.map((link, i) => <Link key={link.label} to={link.to} activeOptions={{ exact: link.to === "/" }} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${pathname === link.to ? "bg-[#e9ede3] text-[#343e2f]" : "text-[#65665e] hover:bg-white hover:text-[#252720]"}`}>{link.label}</Link>)}
+          {links.map((link) => <Link key={link.label} to={link.to} activeOptions={{ exact: link.to === "/" }} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${pathname === link.to ? "bg-[#e9ede3] text-[#343e2f]" : "text-[#65665e] hover:bg-white hover:text-[#252720]"}`}>{link.label}</Link>)}
           {isAdmin ? <Link to="/admin" className="flex items-center gap-1.5 rounded-full bg-[#e9ede3] px-4 py-2 text-xs font-semibold text-[#343e2f]"><LayoutDashboard className="h-4 w-4" /> Admin</Link> : null}
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
