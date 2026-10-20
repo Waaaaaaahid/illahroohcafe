@@ -1,6 +1,6 @@
 import type { OrderStatus } from "@/lib/types";
 
-export const APP_NAME = "Ilarooh";
+export const APP_NAME = "Zrcart";
 
 export const NAV_LINKS = [
   { label: "Home", to: "/" },
@@ -11,14 +11,14 @@ export const NAV_LINKS = [
 
 export const ADMIN_LINKS = [
   { label: "Dashboard", to: "/admin" },
-  { label: "Menu", to: "/admin/menu" },
+  { label: "Products", to: "/admin/menu" },
   { label: "Categories", to: "/admin/categories" },
   { label: "Orders", to: "/admin/orders" },
   { label: "Coupons", to: "/admin/coupons" },
   { label: "Reviews", to: "/admin/reviews" },
   { label: "Users", to: "/admin/users" },
   { label: "Payments", to: "/admin/payments" },
-  { label: "Cafe Settings", to: "/admin/settings" },
+  { label: "Store Settings", to: "/admin/settings" },
 ] as const;
 
 export const SORT_OPTIONS = [
