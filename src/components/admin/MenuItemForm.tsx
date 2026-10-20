@@ -12,6 +12,11 @@ export interface MenuItemFormValues {
   name: string;
   description: string;
   price: string;
+  compareAtPrice: string;
+  sku: string;
+  brand: string;
+  stock: string;
+  badge: string;
   category: string;
   image: string;
   available: boolean;
@@ -23,6 +28,11 @@ export const emptyMenuItemForm: MenuItemFormValues = {
   name: "",
   description: "",
   price: "",
+  compareAtPrice: "",
+  sku: "",
+  brand: "",
+  stock: "0",
+  badge: "",
   category: "",
   image: "",
   available: true,
@@ -35,6 +45,11 @@ export function menuItemToForm(item: MenuItem): MenuItemFormValues {
     name: item.name,
     description: item.description,
     price: String(item.price),
+    compareAtPrice: item.compareAtPrice == null ? "" : String(item.compareAtPrice),
+    sku: item.sku ?? "",
+    brand: item.brand ?? "",
+    stock: String(item.stock ?? 0),
+    badge: item.badge ?? "",
     category: item.category,
     image: item.image,
     available: item.available,
@@ -119,16 +134,34 @@ export function MenuItemForm({
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="name" label="Item name">
-          <TextInput id="name" required value={values.name} onChange={(event) => set("name", event.target.value)} placeholder="Signature Cappuccino" />
+          <TextInput id="name" required value={values.name} onChange={(event) => set("name", event.target.value)} placeholder="Minimal Desk Lamp" />
         </Field>
         <Field id="price" label="Price (INR)">
-          <TextInput id="price" required type="number" min={0} step="0.01" value={values.price} onChange={(event) => set("price", event.target.value)} placeholder="240" />
+          <TextInput id="price" required type="number" min={0} step="0.01" value={values.price} onChange={(event) => set("price", event.target.value)} placeholder="699" />
         </Field>
       </div>
 
       <Field id="description" label="Description">
-        <TextArea id="description" required value={values.description} onChange={(event) => set("description", event.target.value)} placeholder="Double ristretto, silk-steamed milk, cocoa dust." />
+        <TextArea id="description" required value={values.description} onChange={(event) => set("description", event.target.value)} placeholder="Product details and key features." />
       </Field>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field id="compareAtPrice" label="Original price (optional)">
+          <TextInput id="compareAtPrice" type="number" min={0} step="0.01" value={values.compareAtPrice} onChange={(event) => set("compareAtPrice", event.target.value)} placeholder="999" />
+        </Field>
+        <Field id="stock" label="Stock quantity">
+          <TextInput id="stock" type="number" min={0} step="1" value={values.stock} onChange={(event) => set("stock", event.target.value)} placeholder="25" />
+        </Field>
+        <Field id="sku" label="SKU / product code">
+          <TextInput id="sku" value={values.sku} onChange={(event) => set("sku", event.target.value)} placeholder="ZRC-LAMP-001" />
+        </Field>
+        <Field id="brand" label="Brand (optional)">
+          <TextInput id="brand" value={values.brand} onChange={(event) => set("brand", event.target.value)} placeholder="Zrcart" />
+        </Field>
+        <Field id="badge" label="Product badge (optional)">
+          <TextInput id="badge" value={values.badge} onChange={(event) => set("badge", event.target.value)} placeholder="Bestseller / New" />
+        </Field>
+      </div>
 
       <Field id="category" label="Category">
         <Select id="category" required value={values.category} onChange={(event) => set("category", event.target.value)}>
@@ -139,7 +172,7 @@ export function MenuItemForm({
 
       <Field id="image" label="Image URL" hint="Paste a URL or upload a file below">
         <div className="flex flex-col gap-3 sm:flex-row">
-          <TextInput id="image" value={values.image} onChange={(event) => set("image", event.target.value)} placeholder="https://images.unsplash.com/..." />
+          <TextInput id="image" value={values.image} onChange={(event) => set("image", event.target.value)} placeholder="https://example.com/product-image.jpg" />
           <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary">
             <ImagePlus className="size-4" aria-hidden />
             {uploading ? "Uploading…" : "Upload"}
@@ -149,10 +182,10 @@ export function MenuItemForm({
         {values.image ? <img src={values.image} alt="Preview" className="mt-3 h-32 w-full rounded-xl object-cover" /> : null}
       </Field>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <SwitchRow label="Available" checked={values.available} onChange={(value) => set("available", value)} />
-        <SwitchRow label="Popular" checked={values.popular} onChange={(value) => set("popular", value)} />
-        <SwitchRow label="Vegetarian" checked={values.vegetarian} onChange={(value) => set("vegetarian", value)} />
+        <SwitchRow label="Feature on homepage" checked={values.popular} onChange={(value) => set("popular", value)} />
+        
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

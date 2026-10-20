@@ -32,6 +32,11 @@ export interface MenuItem {
   available: boolean;
   popular: boolean;
   vegetarian: boolean;
+  sku?: string | undefined;
+  brand?: string | undefined;
+  compareAtPrice?: number | undefined;
+  stock?: number | undefined;
+  badge?: string | undefined;
   rating?: number | undefined;
   createdAt: string;
   updatedAt: string;
