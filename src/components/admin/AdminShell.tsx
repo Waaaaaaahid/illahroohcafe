@@ -18,12 +18,15 @@ function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
     <nav className="flex flex-1 flex-col gap-1 px-3">
       {ADMIN_LINKS.map((link) => {
         const active = link.to === "/admin" ? pathname === "/admin" : pathname.startsWith(link.to);
+        const label = link.label === "Menu" ? "Products" : link.label === "Cafe Settings" ? "Store Settings" : link.label;
         return (
           <Link key={link.to} to={link.to} onClick={onNavigate} className={cn(
-            "rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
-            active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+            "zrcart-admin-navlink group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all",
+            active ? "zrcart-admin-navlink-active" : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
           )}>
-            {link.label}
+            <span className="flex size-7 items-center justify-center rounded-lg bg-white/5 text-xs font-bold">{label.slice(0, 1)}</span>
+            <span>{label}</span>
+            {active ? <span className="ml-auto size-1.5 rounded-full bg-sidebar-primary" /> : null}
           </Link>
         );
       })}
