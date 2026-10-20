@@ -26,6 +26,7 @@ const LEGACY_FOOD_SLUGS = [
 ];
 
 async function ensureMenuSeeded() {
+  // Zrcart catalog migration: preserve legacy records and keep the storefront commerce-only.
   // Run the legacy-catalog archive once. Keep old records for audit/history,
   // but stop old food categories and products from appearing in the shop.
   const migrations = mongoose.connection.collection('catalogmigrations');
