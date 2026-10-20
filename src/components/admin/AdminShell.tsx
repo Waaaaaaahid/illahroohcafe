@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { LogOut, Menu, X } from "lucide-react";
+import { Activity, LogOut, Menu, Store, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { ADMIN_LINKS } from "@/constants";
@@ -18,12 +18,15 @@ function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
     <nav className="flex flex-1 flex-col gap-1 px-3">
       {ADMIN_LINKS.map((link) => {
         const active = link.to === "/admin" ? pathname === "/admin" : pathname.startsWith(link.to);
+        const label = link.label === "Menu" ? "Products" : link.label === "Cafe Settings" ? "Store Settings" : link.label;
         return (
           <Link key={link.to} to={link.to} onClick={onNavigate} className={cn(
-            "rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
-            active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+            "zrcart-admin-navlink group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all",
+            active ? "zrcart-admin-navlink-active" : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
           )}>
-            {link.label}
+            <span className="flex size-7 items-center justify-center rounded-lg bg-white/5 text-xs font-bold">{label.slice(0, 1)}</span>
+            <span>{label}</span>
+            {active ? <span className="ml-auto size-1.5 rounded-full bg-sidebar-primary" /> : null}
           </Link>
         );
       })}
@@ -35,11 +38,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: (() => void) | undefined 
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="px-6 py-7">
-        <p className="eyebrow text-sidebar-primary">Ilarooh</p>
-        <p className="mt-1 text-lg font-semibold tracking-tight">Admin Console</p>
+    <div className="zrcart-admin-sidebar flex h-full flex-col bg-sidebar text-sidebar-foreground">
+      <div className="border-b border-sidebar-border/70 px-5 pb-6 pt-7">
+        <div className="flex items-center gap-3"><span className="flex size-11 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-lg"><Store className="size-5" /></span><div><p className="text-[17px] font-black tracking-[0.16em] text-sidebar-foreground">ZRCART</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.19em] text-sidebar-foreground/50">Commerce studio</p></div></div>
+        <div className="mt-5 flex items-center gap-2 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40 px-3 py-2"><span className="inline-flex size-2 rounded-full bg-emerald-400" /><span className="text-[11px] font-semibold tracking-wide text-sidebar-foreground/70">Store control center</span></div>
       </div>
+      <p className="px-6 pb-3 pt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35">Workspace</p>
       <NavLinks onNavigate={onNavigate} />
       <div className="mt-auto border-t border-sidebar-border px-4 py-5">
         <div className="flex items-center gap-3 rounded-xl bg-sidebar-accent/40 px-3 py-2.5">
@@ -65,7 +69,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
 
-  // ONE persistent realtime subscription for the entire Admin Console.
+  // ONE persistent realtime subscription for the entire Commerce Studio.
   // Do not include pathname in this effect: navigation must never disconnect SSE.
   useEffect(() => {
     const unsubscribe = orderService.subscribeAdminOrders((event) => {
@@ -114,8 +118,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-sidebar-border lg:block"><SidebarContent /></aside>
+    <div className="zrcart-admin min-h-screen bg-background">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[276px] border-r border-sidebar-border lg:block"><SidebarContent /></aside>
       <AnimatePresence>
         {drawerOpen ? (
           <div className="fixed inset-0 z-[100] lg:hidden">
@@ -127,13 +131,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         ) : null}
       </AnimatePresence>
-      <div className="lg:pl-72">
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-card/90 px-4 py-3.5 backdrop-blur lg:hidden">
+      <div className="lg:pl-[276px]">
+        <header className="zrcart-admin-mobilebar sticky top-0 z-40 flex items-center justify-between border-b border-border bg-card/90 px-4 py-3.5 backdrop-blur lg:hidden">
           <button type="button" aria-label="Open menu" onClick={() => setDrawerOpen(true)} className="rounded-full p-2 text-foreground hover:bg-secondary"><Menu className="size-5" /></button>
-          <p className="text-sm font-semibold">Ilarooh Admin</p>
+          <p className="text-sm font-black tracking-[0.16em]">ZRCART <span className="font-medium tracking-normal text-muted-foreground">Studio</span></p>
           <span className="size-9" aria-hidden />
         </header>
-        <main className="container-page py-8 lg:py-10">{children}</main>
+        <main className="zrcart-admin-main container-page min-h-screen px-4 py-6 sm:px-6 lg:px-9 lg:py-9"><div className="mb-7 hidden items-center justify-between border-b border-border/70 pb-5 lg:flex"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Zrcart / Workspace</p><p className="mt-1 text-sm font-medium text-foreground">Manage your store, orders and customers.</p></div><div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"><Activity className="size-3.5 text-emerald-600" /> Admin workspace</div></div>{children}</main>
       </div>
     </div>
   );

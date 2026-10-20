@@ -10,10 +10,10 @@ import { adminService } from "@/services/adminService";
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
     meta: [
-      { title: "Cafe settings — Ilarooh Admin" },
-      { name: "description", content: "Update cafe details, delivery fee, tax, currency and social links." },
-      { property: "og:title", content: "Cafe settings — Ilarooh Admin" },
-      { property: "og:description", content: "Manage the cafe profile used across the storefront." },
+      { title: "Store settings — Zrcart Admin" },
+      { name: "description", content: "Update store details, delivery fee, tax, currency and social links." },
+      { property: "og:title", content: "Store settings — Zrcart Admin" },
+      { property: "og:description", content: "Manage the store profile used across the storefront." },
     ],
   }),
   component: CafeSettingsPage,
@@ -48,7 +48,7 @@ function CafeSettingsPage() {
       await adminService.updateSettings(form);
       dirtyRef.current = false;
       await queryClient.invalidateQueries({ queryKey: ["cafe-settings"] });
-      notify("Cafe settings updated", { variant: "success" });
+      notify("Store settings updated", { variant: "success" });
     } catch {
       notify("Could not save settings", { variant: "error" });
     } finally {
@@ -58,7 +58,7 @@ function CafeSettingsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-semibold">Cafe settings</h1>
+      <h1 className="font-display text-3xl font-semibold">Store settings</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         These values drive the storefront, checkout totals and footer.
       </p>

@@ -11,7 +11,7 @@ import { ConfirmModal } from "@/components/admin/ConfirmModal";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/Loading/Loading";
 import type { Category } from "@/lib/types";
 
-export const Route = createFileRoute("/admin/categories")({ head: () => ({ meta: [{ title: "Categories — Ilarooh Admin" }] }), component: AdminCategories });
+export const Route = createFileRoute("/admin/categories")({ head: () => ({ meta: [{ title: "Categories — Zrcart Admin" }] }), component: AdminCategories });
 interface CategoryFormValues { name: string; slug: string; description: string; image: string; active: boolean; }
 const emptyForm: CategoryFormValues = { name: "", slug: "", description: "", image: "", active: true };
 

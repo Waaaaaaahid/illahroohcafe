@@ -193,3 +193,17 @@ main .bg-amber-gradient { background: linear-gradient(135deg, #c81019, #a90d15);
   .food-fries { left: 52%; top: 35%; width: 25%; height: 23%; }
   .hero-splash { left: 13%; top: 17%; width: 72%; height: 68%; }
 }
+
+/* Zrcart commerce admin: a distinct, calm dashboard visual system */
+.zrcart-admin { --admin-ink: #17211d; --admin-green: #163c32; --admin-mint: #dff2e8; color: var(--admin-ink); background: #f5f7f5; }
+.zrcart-admin .zrcart-admin-sidebar { background: linear-gradient(165deg, #142f29 0%, #102720 54%, #0c201b 100%); color: #f5faf6; }
+.zrcart-admin .zrcart-admin-navlink-active { color: #163c32; background: #e4f4eb; box-shadow: 0 8px 22px -15px rgba(0,0,0,.6); }
+.zrcart-admin .zrcart-admin-navlink-active:hover { background: #eff9f2; }
+.zrcart-admin .zrcart-admin-main h1 { color: #17211d; letter-spacing: -.04em; font-weight: 750; }
+.zrcart-admin .zrcart-admin-main .rounded-3xl.border, .zrcart-admin .zrcart-admin-main .rounded-2xl.border { border-color: #e3e9e4; box-shadow: 0 10px 30px -25px rgba(18,45,33,.35); }
+.zrcart-admin .zrcart-admin-main table thead { background: #f7faf7; }
+.zrcart-admin .zrcart-admin-main table tbody tr { transition: background .18s ease; }
+.zrcart-admin .zrcart-admin-main table tbody tr:hover { background: #f5faf6; }
+.zrcart-admin .zrcart-admin-main input:focus, .zrcart-admin .zrcart-admin-main select:focus, .zrcart-admin .zrcart-admin-main textarea:focus { border-color: #78a58e; --tw-ring-color: #b8dfc8; }
+.zrcart-admin-mobilebar { background: rgba(255,255,255,.92); }
+@media (max-width: 1023px) { .zrcart-admin-main { padding-top: 1.5rem; } }

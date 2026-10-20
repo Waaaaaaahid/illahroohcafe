@@ -14,7 +14,7 @@ import { ConfirmModal } from "@/components/admin/ConfirmModal";
 import { MenuItemForm, emptyMenuItemForm, menuItemToForm, type MenuItemFormValues } from "@/components/admin/MenuItemForm";
 import type { MenuItem } from "@/lib/types";
 
-export const Route = createFileRoute("/admin/menu")({ head: () => ({ meta: [{ title: "Menu Management — Ilarooh Admin" }] }), component: AdminMenu });
+export const Route = createFileRoute("/admin/menu")({ head: () => ({ meta: [{ title: "Menu Management — Zrcart Admin" }] }), component: AdminMenu });
 
 function AdminMenu() {
   const [search, setSearch] = useState("");

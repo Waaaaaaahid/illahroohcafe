@@ -9,7 +9,7 @@ import { EmptyState, ErrorState, TableSkeleton } from "@/components/Loading/Load
 import { useToast } from "@/context/ToastContext";
 import { reviewService, type Review } from "@/services/reviewService";
 
-export const Route = createFileRoute("/admin/reviews")({ head: () => ({ meta: [{ title: "Reviews — Ilarooh Admin" }] }), component: AdminReviews });
+export const Route = createFileRoute("/admin/reviews")({ head: () => ({ meta: [{ title: "Reviews — Zrcart Admin" }] }), component: AdminReviews });
 
 function AdminReviews() {
   const qc = useQueryClient(); const { notify } = useToast();
