@@ -10,9 +10,9 @@ import { validateRegister, type FieldErrors, type RegisterForm } from "@/utils/v
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create your account — Ilarooh" },
-      { name: "description", content: "Create a Ilarooh account for faster checkout, saved addresses and order tracking." },
-      { property: "og:title", content: "Join Ilarooh" },
+      { title: "Create your account — Zrcart" },
+      { name: "description", content: "Create a Zrcart account for faster checkout, saved addresses and order tracking." },
+      { property: "og:title", content: "Join Zrcart" },
       { property: "og:description", content: "Faster checkout, saved addresses and live order tracking." },
     ],
   }),
@@ -47,7 +47,7 @@ function RegisterPage() {
         phone: form.phone,
         password: form.password,
       });
-      notify("Account created", { description: "Welcome to Ilarooh.", variant: "success" });
+      notify("Account created", { description: "Welcome to Zrcart.", variant: "success" });
       await navigate({ to: "/" });
     } catch (error) {
       notify("Could not create your account", {
@@ -79,7 +79,7 @@ function RegisterPage() {
             value={form.name}
             invalid={Boolean(errors.name)}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
-            placeholder="Aarav Mehta"
+            placeholder="Your full name"
           />
         </Field>
         <Field id="register-email" label="Email" error={errors.email}>
