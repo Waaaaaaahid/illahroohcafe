@@ -71,3 +71,5 @@ async function ensureMenuSeeded() {
 }
 
 module.exports = ensureMenuSeeded;
+
+// Deployment trigger: ensure Vercel checks the latest main branch commit.
