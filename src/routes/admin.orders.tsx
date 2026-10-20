@@ -12,10 +12,10 @@ import { ORDER_STATUSES, type Order, type OrderStatus } from "@/lib/types";
 export const Route = createFileRoute("/admin/orders")({
   head: () => ({
     meta: [
-      { title: "Orders — Ilarooh Admin" },
-      { name: "description", content: "Track and update every order placed at Ilarooh." },
-      { property: "og:title", content: "Orders — Ilarooh Admin" },
-      { property: "og:description", content: "Track and update every order placed at Ilarooh." },
+      { title: "Orders — Zrcart Admin" },
+      { name: "description", content: "Track and update every order placed at Zrcart." },
+      { property: "og:title", content: "Orders — Zrcart Admin" },
+      { property: "og:description", content: "Track and update every order placed at Zrcart." },
     ],
   }),
   component: AdminOrders,
