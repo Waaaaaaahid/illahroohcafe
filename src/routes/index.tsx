@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, Heart, Search, ShieldCheck, ShoppingBag, Sparkles, Truck, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, Heart, ShieldCheck, Sparkles, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
