@@ -117,9 +117,15 @@ export function AuthLayout({
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="w-full max-w-md rounded-[2rem] border border-[#e4e7dc] bg-white p-7 shadow-[0_24px_70px_rgba(43,55,35,0.10)] sm:p-10"
       >
-        <span className="flex size-11 items-center justify-center rounded-2xl bg-amber-gradient text-accent-foreground">
-          <Coffee className="size-5" />
-        </span>
+        <div className="mb-6 flex items-center gap-3">
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-[#344a35] text-white">
+            <ShoppingBag className="size-5" />
+          </span>
+          <div>
+            <p className="text-lg font-extrabold tracking-[0.16em] text-[#344a35]">ZRCART</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87917d]">Everyday, elevated</p>
+          </div>
+        </div>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-[#20291f]">{title}</h1>
         <p className="mt-2 text-sm leading-6 text-[#737b6d]">{subtitle}</p>
         <div className="mt-8">{children}</div>
