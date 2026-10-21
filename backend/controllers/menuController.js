@@ -8,7 +8,7 @@ const { deleteCloudinaryImage } = require('../services/uploadService');
 const { success, error } = require('../utils/response');
 
 const toClientItem = (item, rating = 0) => ({ ...item.toObject(), category: item.category?.slug ?? '', image: item.image?.url ?? '', rating });
-const resolveCategoryId = async (slug) => { if (!slug) return null; const category = await Category.findOne({ slug }); return category ? category._id : null; };
+const resolveCategoryId = async (slug) => { if (!slug) return null; const category = await Category.findOne({ slug, active: true }); return category ? category._id : null; };
 const normalizeImage = (image) => { if (!image) return undefined; if (typeof image === 'string') return { url: image }; return image; };
 
 async function ratingMapFor(items) {
@@ -22,14 +22,24 @@ async function ratingMapFor(items) {
 }
 
 const getMenuItems = asyncHandler(async (req, res) => {
-  const filters = {};
-  if (req.query.category) { const categoryDoc = await Category.findOne({ slug: req.query.category }); if (categoryDoc) filters.category = categoryDoc._id; else if (mongoose.isValidObjectId(req.query.category)) filters.category = req.query.category; else return success(res, 200, []); }
+  // Only products assigned to active commerce categories can appear in storefront or admin lists.
+  const activeCategoryIds = await Category.find({ active: true }).distinct('_id');
+  const filters = { category: { $in: activeCategoryIds } };
+
+  if (req.query.category) {
+    const categoryDoc = await Category.findOne({ slug: req.query.category, active: true });
+    if (categoryDoc) filters.category = categoryDoc._id;
+    else if (mongoose.isValidObjectId(req.query.category) && activeCategoryIds.some((id) => String(id) === req.query.category)) filters.category = req.query.category;
+    else return success(res, 200, []);
+  }
   if (req.query.available) filters.available = req.query.available === 'true';
   if (req.query.popular) filters.popular = req.query.popular === 'true';
   if (req.query.search) filters.name = { $regex: req.query.search, $options: 'i' };
-  const menuItems = await MenuItem.find(filters).populate('category');
-  const ratings = await ratingMapFor(menuItems);
-  return success(res, 200, menuItems.map((item) => toClientItem(item, ratings.get(String(item._id)) ?? 0)));
+
+  const menuItems = await MenuItem.find(filters).populate({ path: 'category', match: { active: true } });
+  const visibleItems = menuItems.filter((item) => item.category);
+  const ratings = await ratingMapFor(visibleItems);
+  return success(res, 200, visibleItems.map((item) => toClientItem(item, ratings.get(String(item._id)) ?? 0)));
 });
 
 const createMenuItem = asyncHandler(async (req, res) => {
@@ -42,7 +52,7 @@ const createMenuItem = asyncHandler(async (req, res) => {
 
 const getMenuItemById = asyncHandler(async (req, res) => {
   const menuItem = await MenuItem.findById(req.params.id).populate('category');
-  if (!menuItem) return error(res, 404, 'Menu item not found');
+  if (!menuItem || !menuItem.category?.active) return error(res, 404, 'Product not found');
   const ratings = await ratingMapFor([menuItem]);
   return success(res, 200, toClientItem(menuItem, ratings.get(String(menuItem._id)) ?? 0), 'Menu item retrieved');
 });
