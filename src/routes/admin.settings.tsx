@@ -18,10 +18,10 @@ export const Route = createFileRoute("/admin/settings")({
       { property: "og:description", content: "Manage the store profile used across the storefront." },
     ],
   }),
-  component: CafeSettingsPage,
+  component: StoreSettingsPage,
 });
 
-function CafeSettingsPage() {
+function StoreSettingsPage() {
   const { settings, isLoading } = useCafe();
   const { notify } = useToast();
   const queryClient = useQueryClient();
@@ -29,7 +29,7 @@ function CafeSettingsPage() {
   const [saving, setSaving] = useState(false);
   const dirtyRef = useRef(false);
 
-  // The first render uses the neutral CafeContext fallback while the API loads.
+  // The first render uses the neutral store-settings fallback while the API loads.
   // Hydrate the form once the real saved settings arrive, but never overwrite
   // values the admin has already started editing.
   useEffect(() => {
@@ -115,7 +115,7 @@ function CafeSettingsPage() {
         <section className="rounded-3xl border border-border bg-card p-6 shadow-soft">
           <h2 className="font-display text-lg font-semibold">Profile</h2>
           <div className="mt-5 space-y-4">
-            <Field id="s-name" label="Cafe name">
+            <Field id="s-name" label="Store name">
               <TextInput id="s-name" value={form.name} onChange={(e) => updateForm({ ...form, name: e.target.value })} />
             </Field>
             <Field id="s-logo" label="Logo URL" hint="Cloudinary URL once uploads are connected">
