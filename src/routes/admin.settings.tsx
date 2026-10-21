@@ -266,42 +266,6 @@ function StoreSettingsPage() {
           <p className="mt-4 text-xs leading-5 text-muted-foreground">Scheduling uses the store server/browser local time. Leave start or end blank for no time limit. The message is only shown while enabled and inside its schedule. A banner message does not change actual product prices or apply a discount automatically.</p>
         </section>
 
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-soft">
-          <h2 className="font-display text-lg font-semibold">Opening hours</h2>
-          <div className="mt-5 space-y-3">
-            {form.openingHours.map((entry, index) => (
-              <div key={index} className="grid gap-3 sm:grid-cols-2">
-                <TextInput
-                  aria-label="Days"
-                  value={entry.day}
-                  onChange={(e) => {
-                    const next = [...form.openingHours];
-                    next[index] = { ...entry, day: e.target.value };
-                    updateForm({ ...form, openingHours: next });
-                  }}
-                />
-                <TextInput
-                  aria-label="Hours"
-                  value={entry.hours}
-                  onChange={(e) => {
-                    const next = [...form.openingHours];
-                    next[index] = { ...entry, hours: e.target.value };
-                    updateForm({ ...form, openingHours: next });
-                  }}
-                />
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => updateForm({ ...form, openingHours: [...form.openingHours, { day: "", hours: "" }] })}
-            >
-              Add row
-            </Button>
-          </div>
-        </section>
-
         <div className="lg:col-span-2">
           <Button type="submit" size="lg" loading={saving}>
             Save settings
