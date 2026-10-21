@@ -37,7 +37,7 @@ async function ensureMenuSeeded() {
   const migrationKey = 'zrcart-food-catalog-removal-v2';
   const migration = await migrations.findOne({ _id: migrationKey });
   if (!migration) {
-    const legacyCategories = await Category.find({ slug: { $in: LEGACY_FOOD_SLUGS } }).select('_id');
+    const legacyCategories = await Category.find({ $or: [{ slug: { $in: LEGACY_FOOD_SLUGS } }, { name: LEGACY_FOOD_NAME_PATTERN }] }).select('_id');
     const legacyIds = legacyCategories.map((category) => category._id);
     if (legacyIds.length) {
       await MenuItem.deleteMany({ category: { $in: legacyIds } });
