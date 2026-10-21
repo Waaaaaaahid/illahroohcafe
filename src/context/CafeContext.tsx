@@ -5,6 +5,15 @@ import type { CafeSettings } from "@/lib/types";
 
 /** Neutral fallback while settings load (real values come from the backend). */
 const FALLBACK_SETTINGS: CafeSettings = {
+  announcementBar: {
+    enabled: true,
+    defaultDurationSeconds: 4,
+    animation: "fade",
+    announcements: [
+      { id: "brand-message", text: "A LITTLE SOMETHING BETTER, EVERY DAY ✳ SHOP SMART WITH ZRCART", enabled: true, order: 0, durationSeconds: 4, animation: "fade", backgroundColor: "#22231f", textColor: "#ffffff", link: "", startsAt: null, endsAt: null },
+      { id: "discover-message", text: "DISCOVER SOMETHING GOOD — SHOP THE LATEST FINDS", enabled: true, order: 1, durationSeconds: 4, animation: "slide", backgroundColor: "#e9ede3", textColor: "#252720", link: "/menu", startsAt: null, endsAt: null },
+    ],
+  },
   name: "IlaahRooh",
   logo: "",
   description: "Taste that reaches your soul",
@@ -38,7 +47,9 @@ export function CafeProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<CafeContextValue>(
     () => ({
-      settings: query.data ?? FALLBACK_SETTINGS,
+      settings: query.data
+        ? { ...FALLBACK_SETTINGS, ...query.data, announcementBar: query.data.announcementBar ?? FALLBACK_SETTINGS.announcementBar }
+        : FALLBACK_SETTINGS,
       isLoading: query.isLoading,
       isError: query.isError,
       refetch: () => void query.refetch(),
