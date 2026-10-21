@@ -69,13 +69,6 @@ async function ensureMenuSeeded() {
     );
   }
 
-  if (!migration) {
-    await migrations.updateOne(
-      { _id: migrationKey },
-      { $setOnInsert: { completedAt: new Date(), archivedCategorySlugs: LEGACY_FOOD_SLUGS } },
-      { upsert: true },
-    );
-  }
 
   return { items: PRODUCTS.length, categories: CATEGORIES.length, removedLegacyFoodCatalog: !migration };
 }
