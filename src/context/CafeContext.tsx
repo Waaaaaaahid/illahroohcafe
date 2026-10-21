@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { menuService } from "@/services/menuService";
 import type { CafeSettings } from "@/lib/types";
 
-/** Neutral fallback while settings load (real values come from the backend). */
+/** Neutral Zrcart store fallback while settings load (real values come from the backend). */
 const FALLBACK_SETTINGS: CafeSettings = {
   announcementBar: {
     enabled: true,
@@ -14,9 +14,9 @@ const FALLBACK_SETTINGS: CafeSettings = {
       { id: "discover-message", text: "DISCOVER SOMETHING GOOD — SHOP THE LATEST FINDS", enabled: true, order: 1, durationSeconds: 4, animation: "slide", backgroundColor: "#e9ede3", textColor: "#252720", link: "/menu", startsAt: null, endsAt: null },
     ],
   },
-  name: "IlaahRooh",
+  name: "Zrcart",
   logo: "",
-  description: "Taste that reaches your soul",
+  description: "Everyday essentials, thoughtfully picked.",
   phone: "",
   email: "",
   address: "",
@@ -37,7 +37,7 @@ interface CafeContextValue {
 
 const CafeContext = createContext<CafeContextValue | null>(null);
 
-/** Cafe-wide settings from GET /api/cafe/settings, consumed across the UI. */
+/** Store settings from the settings API, consumed across the storefront. */
 export function CafeProvider({ children }: { children: ReactNode }) {
   const query = useQuery({
     queryKey: ["cafe-settings"],
