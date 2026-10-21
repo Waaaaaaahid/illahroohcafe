@@ -48,9 +48,27 @@ async function seedCatalog() {
   }
 
   if (replace) {
+    // Keep unrelated non-food records safely unavailable, and permanently remove the retired restaurant catalog.
     await MenuItem.updateMany({ _id: { $nin: seededIds } }, { $set: { available: false } });
     await Category.updateMany({ slug: { $nin: CATEGORIES.map((category) => category.slug) } }, { $set: { active: false } });
-    console.log('Legacy food products were marked unavailable and legacy categories were archived (not deleted).');
+
+    const legacyFoodSlugs = [
+      'beverages', 'coffee', 'desserts', 'pizza', 'burgers', 'pizza-7-inches',
+      'pasta', 'wraps', 'snacks', 'drinks-beverages', 'cheesesteak',
+      'fries-sides', 'mojitos-coolers', 'coffee-shakes', 'healthy-bowls-salads',
+      'salads', 'drinks', 'milkshakes', 'sides', 'starters', 'main-course',
+    ];
+    const legacyCategories = await Category.find({ slug: { $in: legacyFoodSlugs } }).select('_id');
+    const legacyIds = legacyCategories.map((category) => category._id);
+    if (legacyIds.length) {
+      await MenuItem.deleteMany({ category: { $in: legacyIds } });
+      await Category.deleteMany({ _id: { $in: legacyIds } });
+    }
+    await MenuItem.deleteMany({
+      _id: { $nin: seededIds },
+      name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|brownie|cake|sundae|cookie|cheesecake|salad|nugget|sandwich|cheesesteak|steak|garlic bread|chicken|wings|kebab|tikka|beverage|\\bdrinks?\\b|latte|cappuccino|milkshake|smoothie|ice cream|soft drink|soda|lemonade|juice/i,
+    });
+    console.log('Legacy restaurant food items and categories removed.');
   }
 
   console.log(`Zrcart catalog seeded: ${PRODUCTS.length} products, ${CATEGORIES.length} categories.`);
