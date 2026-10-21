@@ -48,28 +48,29 @@ async function seedCatalog() {
   }
 
   if (replace) {
-    // Keep unrelated non-food records safely unavailable, and permanently remove the retired restaurant catalog.
+    // Keep unrelated non-food records safely unavailable in full replacement mode.
     await MenuItem.updateMany({ _id: { $nin: seededIds } }, { $set: { available: false } });
     await Category.updateMany({ slug: { $nin: CATEGORIES.map((category) => category.slug) } }, { $set: { active: false } });
-
-    const legacyFoodSlugs = [
-      'beverages', 'coffee', 'desserts', 'pizza', 'burgers', 'pizza-7-inches',
-      'pasta', 'wraps', 'snacks', 'drinks-beverages', 'cheesesteak',
-      'fries-sides', 'mojitos-coolers', 'coffee-shakes', 'healthy-bowls-salads',
-      'salads', 'drinks', 'milkshakes', 'sides', 'starters', 'main-course',
-    ];
-    const legacyCategories = await Category.find({ $or: [{ slug: { $in: legacyFoodSlugs } }, { name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|salad|beverage|\bdrinks?\b|milkshake|starter|main course/i }] }).select('_id');
-    const legacyIds = legacyCategories.map((category) => category._id);
-    if (legacyIds.length) {
-      await MenuItem.deleteMany({ category: { $in: legacyIds } });
-      await Category.deleteMany({ _id: { $in: legacyIds } });
-    }
-    await MenuItem.deleteMany({
-      _id: { $nin: seededIds },
-      name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|brownie|cake|sundae|cookie|cheesecake|salad|nugget|sandwich|cheesesteak|steak|garlic bread|chicken|wings|kebab|tikka|beverage|\bdrinks?\b|latte|cappuccino|milkshake|smoothie|ice cream|soft drink|soda|lemonade|juice/i,
-    });
-    console.log('Legacy restaurant food items and categories removed.');
   }
+
+  // Always remove the retired restaurant catalog, regardless of which seed command ran.
+  const legacyFoodSlugs = [
+    'beverages', 'coffee', 'desserts', 'pizza', 'burgers', 'pizza-7-inches',
+    'pasta', 'wraps', 'snacks', 'drinks-beverages', 'cheesesteak',
+    'fries-sides', 'mojitos-coolers', 'coffee-shakes', 'healthy-bowls-salads',
+    'salads', 'drinks', 'milkshakes', 'sides', 'starters', 'main-course',
+  ];
+  const legacyCategories = await Category.find({ $or: [{ slug: { $in: legacyFoodSlugs } }, { name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|salad|beverage|\\bdrinks?\\b|milkshake|starter|main course/i }] }).select('_id');
+  const legacyIds = legacyCategories.map((category) => category._id);
+  if (legacyIds.length) {
+    await MenuItem.deleteMany({ category: { $in: legacyIds } });
+    await Category.deleteMany({ _id: { $in: legacyIds } });
+  }
+  await MenuItem.deleteMany({
+    _id: { $nin: seededIds },
+    name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|brownie|cake|sundae|cookie|cheesecake|salad|nugget|sandwich|cheesesteak|steak|garlic bread|chicken|wings|kebab|tikka|beverage|\\bdrinks?\\b|latte|cappuccino|milkshake|smoothie|ice cream|soft drink|soda|lemonade|juice/i,
+  });
+  console.log('Legacy restaurant food items and categories removed.');
 
   console.log(`Zrcart catalog seeded: ${PRODUCTS.length} products, ${CATEGORIES.length} categories.`);
   await mongoose.disconnect();
