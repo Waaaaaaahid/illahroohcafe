@@ -11,6 +11,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
 
 const connectDB = require('./config/db');
+const ensureMenuSeeded = require('./scripts/ensureMenuSeeded');
 
 const authRoutes = require('./routes/authRoutes');
 const menuRoutes = require('./routes/menuRoutes');
@@ -84,7 +85,8 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 if (require.main === module) {
-  connectDB().then(() => {
+  connectDB().then(async () => {
+    await ensureMenuSeeded();
     app.listen(PORT, '0.0.0.0', () => console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`));
   }).catch((error) => {
     console.error(`Failed to start server: ${error.message}`);
