@@ -48,16 +48,23 @@ export function CafeProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: true,
   });
 
+  // Keep the normalized settings object stable between polling requests so
+  // admin forms don't rehydrate (or lose focus) on every React render.
+  const settings = useMemo<CafeSettings>(
+    () => query.data
+      ? { ...FALLBACK_SETTINGS, ...query.data, announcementBar: query.data.announcementBar ?? FALLBACK_SETTINGS.announcementBar }
+      : FALLBACK_SETTINGS,
+    [query.data],
+  );
+
   const value = useMemo<CafeContextValue>(
     () => ({
-      settings: query.data
-        ? { ...FALLBACK_SETTINGS, ...query.data, announcementBar: query.data.announcementBar ?? FALLBACK_SETTINGS.announcementBar }
-        : FALLBACK_SETTINGS,
+      settings,
       isLoading: query.isLoading,
       isError: query.isError,
       refetch: () => void query.refetch(),
     }),
-    [query],
+    [settings, query.isLoading, query.isError, query.refetch],
   );
 
   return <CafeContext.Provider value={value}>{children}</CafeContext.Provider>;
