@@ -44,7 +44,7 @@ export function CafeProvider({ children }: { children: ReactNode }) {
     queryFn: menuService.settings,
     staleTime: 15 * 1000,
     // Let announcements changed in the admin panel reach already-open storefronts.
-    refetchInterval: 30 * 1000,
+    refetchInterval: 5 * 1000,
     refetchOnWindowFocus: true,
   });
 
