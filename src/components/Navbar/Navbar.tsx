@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/AppButton";
+import { AnnouncementBar } from "@/components/AnnouncementBar/AnnouncementBar";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -25,6 +26,7 @@ export function Navbar() {
 
   return (
     <header className={`sticky top-0 z-50 border-b border-[#e9e8e1] bg-[#fbfaf7]/95 backdrop-blur-xl transition-all duration-300 ${scrolled ? "shadow-[0_8px_28px_rgba(30,32,26,.06)]" : ""}`}>
+      <AnnouncementBar />
       <nav className="mx-auto flex h-[70px] max-w-[1440px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-14">
         <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Zrcart home">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#252720] text-white"><ShoppingBag className="h-4 w-4" /></span>
