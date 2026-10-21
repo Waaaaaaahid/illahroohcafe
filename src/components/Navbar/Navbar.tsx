@@ -3,6 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, LogOut, Menu as MenuIcon, Search, ShoppingBag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useCafe } from "@/context/CafeContext";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/AppButton";
 import { AnnouncementBar } from "@/components/AnnouncementBar/AnnouncementBar";
@@ -11,6 +12,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { count, openCart } = useCart();
+  const { settings } = useCafe();
   const { user, isAdmin, logout } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
@@ -28,9 +30,9 @@ export function Navbar() {
     <header className={`sticky top-0 z-50 border-b border-[#e9e8e1] bg-[#fbfaf7]/95 backdrop-blur-xl transition-all duration-300 ${scrolled ? "shadow-[0_8px_28px_rgba(30,32,26,.06)]" : ""}`}>
       <AnnouncementBar />
       <nav className="mx-auto flex h-[70px] max-w-[1440px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-14">
-        <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Zrcart home">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${settings.name || "Store"} home`}>
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#252720] text-white"><ShoppingBag className="h-4 w-4" /></span>
-          <span className="text-[1.65rem] font-bold tracking-[-.075em] text-[#252720]">zr<span className="text-[#78866b]">cart</span><span className="ml-1 align-top text-[8px] font-semibold tracking-[.2em] text-[#8b8c83]">®</span></span>
+          <span className="text-[1.35rem] font-bold tracking-[-.055em] text-[#252720]">{settings.name || "Zrcart"}</span>
         </Link>
         <div className="hidden items-center gap-1 lg:flex">
           {links.map((link) => <Link key={link.label} to={link.to} activeOptions={{ exact: link.to === "/" }} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${pathname === link.to ? "bg-[#e9ede3] text-[#343e2f]" : "text-[#65665e] hover:bg-white hover:text-[#252720]"}`}>{link.label}</Link>)}
