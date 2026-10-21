@@ -111,7 +111,31 @@ export interface Payment {
   createdAt: string;
 }
 
+export type AnnouncementAnimation = "fade" | "slide" | "static";
+
+export interface AnnouncementItem {
+  id: string;
+  text: string;
+  enabled: boolean;
+  order: number;
+  durationSeconds: number;
+  animation: AnnouncementAnimation;
+  backgroundColor: string;
+  textColor: string;
+  link: string;
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
+export interface AnnouncementBarConfig {
+  enabled: boolean;
+  defaultDurationSeconds: number;
+  animation: AnnouncementAnimation;
+  announcements: AnnouncementItem[];
+}
+
 export interface CafeSettings {
+  announcementBar: AnnouncementBarConfig;
   name: string;
   logo: string;
   description: string;
