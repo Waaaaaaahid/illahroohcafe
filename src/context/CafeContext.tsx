@@ -42,7 +42,10 @@ export function CafeProvider({ children }: { children: ReactNode }) {
   const query = useQuery({
     queryKey: ["cafe-settings"],
     queryFn: menuService.settings,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 15 * 1000,
+    // Let announcements changed in the admin panel reach already-open storefronts.
+    refetchInterval: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   const value = useMemo<CafeContextValue>(
