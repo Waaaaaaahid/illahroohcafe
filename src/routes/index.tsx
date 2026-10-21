@@ -11,6 +11,7 @@ export const Route = createFileRoute("/")({
     { property: "og:title", content: "Zrcart — Everyday finds. Better prices." },
     { property: "og:description", content: "Shop useful finds for your everyday life." },
   ] }),
+  // The announcement bar is rendered globally by Navbar; keep the homepage banner-free.
   component: HomePage,
 });
 
