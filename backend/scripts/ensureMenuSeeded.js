@@ -23,22 +23,32 @@ const PRODUCTS = [
 const LEGACY_FOOD_SLUGS = [
   'beverages', 'coffee', 'desserts', 'pizza', 'burgers', 'pizza-7-inches',
   'pasta', 'wraps', 'snacks', 'drinks-beverages', 'cheesesteak',
+  'fries-sides', 'mojitos-coolers', 'coffee-shakes', 'healthy-bowls-salads',
+  'salads', 'drinks', 'milkshakes', 'sides', 'starters', 'main-course',
 ];
 
+// Catch food products left behind in unexpected or renamed legacy categories.
+const LEGACY_FOOD_NAME_PATTERN = /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|brownie|cake|sundae|cookie|cheesecake|salad|nugget|sandwich|cheesesteak|steak|garlic bread|chicken|wings|kebab|tikka|beverage|\bdrinks?\b|latte|cappuccino|milkshake|smoothie|ice cream|soft drink|soda|lemonade|juice/i;
+
 async function ensureMenuSeeded() {
-  // Zrcart catalog migration: preserve legacy records and keep the storefront commerce-only.
-  // Run the legacy-catalog archive once. Keep old records for audit/history,
-  // but stop old food categories and products from appearing in the shop.
+  // Remove the legacy restaurant catalog once. Order records retain their own snapshots;
+  // the old food products/categories must not remain in the storefront or admin catalog.
   const migrations = mongoose.connection.collection('catalogmigrations');
-  const migrationKey = 'zrcart-commerce-catalog-v1';
+  const migrationKey = 'zrcart-food-catalog-removal-v2';
   const migration = await migrations.findOne({ _id: migrationKey });
   if (!migration) {
     const legacyCategories = await Category.find({ slug: { $in: LEGACY_FOOD_SLUGS } }).select('_id');
     const legacyIds = legacyCategories.map((category) => category._id);
     if (legacyIds.length) {
-      await MenuItem.updateMany({ category: { $in: legacyIds } }, { $set: { available: false } });
-      await Category.updateMany({ _id: { $in: legacyIds } }, { $set: { active: false } });
+      await MenuItem.deleteMany({ category: { $in: legacyIds } });
+      await Category.deleteMany({ _id: { $in: legacyIds } });
     }
+    await MenuItem.deleteMany({ name: LEGACY_FOOD_NAME_PATTERN, sku: { $nin: PRODUCTS.map((product) => product.sku) } });
+    await migrations.updateOne(
+      { _id: migrationKey },
+      { $setOnInsert: { completedAt: new Date(), removedFoodCategorySlugs: LEGACY_FOOD_SLUGS } },
+      { upsert: true },
+    );
   }
 
   const categoryIds = new Map();
@@ -67,9 +77,8 @@ async function ensureMenuSeeded() {
     );
   }
 
-  return { items: PRODUCTS.length, categories: CATEGORIES.length, migratedLegacyCatalog: !migration };
+  return { items: PRODUCTS.length, categories: CATEGORIES.length, removedLegacyFoodCatalog: !migration };
 }
 
 module.exports = ensureMenuSeeded;
 
-// Deployment trigger: ensure Vercel checks the latest main branch commit.
