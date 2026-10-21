@@ -48,7 +48,6 @@ function HomePage() {
   const displayProducts = featuredProducts.length ? featuredProducts : products.slice(0, 4);
 
   return <div className="bg-[#fbfaf7] text-[#242521]">
-    <div className="bg-[#22231f] px-4 py-2.5 text-center text-[10px] font-semibold tracking-[.15em] text-white sm:text-[11px]">A LITTLE SOMETHING BETTER, EVERY DAY <span className="mx-2 text-[#c9d4b8]">✳</span> SHOP SMART WITH ZRCART</div>
     <section className="mx-auto grid max-w-[1440px] gap-8 px-5 pb-12 pt-8 sm:px-8 sm:pb-16 sm:pt-12 lg:grid-cols-[1fr_.92fr] lg:items-center lg:gap-12 lg:px-14 lg:pt-14">
       <div className="order-2 pb-3 lg:order-1 lg:pb-8">
         <div className="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.22em] text-[#6e7c62]"><Sparkles className="h-4 w-4" /> Curated for everyday living</div>
