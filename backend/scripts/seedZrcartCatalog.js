@@ -58,7 +58,7 @@ async function seedCatalog() {
       'fries-sides', 'mojitos-coolers', 'coffee-shakes', 'healthy-bowls-salads',
       'salads', 'drinks', 'milkshakes', 'sides', 'starters', 'main-course',
     ];
-    const legacyCategories = await Category.find({ $or: [{ slug: { $in: legacyFoodSlugs } }, { name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|salad|beverage|\\bdrinks?\\b|milkshake|starter|main course/i }] }).select('_id');
+    const legacyCategories = await Category.find({ $or: [{ slug: { $in: legacyFoodSlugs } }, { name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|salad|beverage|\bdrinks?\b|milkshake|starter|main course/i }] }).select('_id');
     const legacyIds = legacyCategories.map((category) => category._id);
     if (legacyIds.length) {
       await MenuItem.deleteMany({ category: { $in: legacyIds } });
@@ -66,7 +66,7 @@ async function seedCatalog() {
     }
     await MenuItem.deleteMany({
       _id: { $nin: seededIds },
-      name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|brownie|cake|sundae|cookie|cheesecake|salad|nugget|sandwich|cheesesteak|steak|garlic bread|chicken|wings|kebab|tikka|beverage|\\bdrinks?\\b|latte|cappuccino|milkshake|smoothie|ice cream|soft drink|soda|lemonade|juice/i,
+      name: /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|brownie|cake|sundae|cookie|cheesecake|salad|nugget|sandwich|cheesesteak|steak|garlic bread|chicken|wings|kebab|tikka|beverage|\bdrinks?\b|latte|cappuccino|milkshake|smoothie|ice cream|soft drink|soda|lemonade|juice/i,
     });
     console.log('Legacy restaurant food items and categories removed.');
   }
