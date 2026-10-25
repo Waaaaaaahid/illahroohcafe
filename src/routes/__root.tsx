@@ -59,8 +59,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ilarooh — Slow-craft coffee house & kitchen" },
-      { name: "description", content: "Order single-origin coffee, stone-baked plates and patisserie from Ilarooh, Bandra West." },
+      { title: "Online Store" },
+      { name: "description", content: "Discover thoughtfully selected products for everyday living." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
