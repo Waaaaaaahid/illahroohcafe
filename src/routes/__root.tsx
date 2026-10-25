@@ -83,7 +83,15 @@ function RootShell({ children }: { children: ReactNode }) {
   return <html lang="en"><head><HeadContent /></head><body>{children}<Scripts /></body></html>;
 }
 
-function WhatsAppEnquiry() {\n  const { settings } = useCafe();\n  const digits = (settings.whatsappNumber || settings.phone || "").replace(/\\D/g, "");\n  if (!digits) return null;\n  const message = encodeURIComponent(`Hi ${settings.name || "there"}, I have an enquiry.`);\n  return <a href={`https://wa.me/${digits}?text=${message}`} target="_blank" rel="noreferrer" aria-label="WhatsApp enquiry" className="fixed bottom-24 left-3 z-[60] inline-flex items-center gap-2 rounded-full bg-[#16c765] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] sm:bottom-8 sm:left-5"><MessageCircle className="h-5 w-5" /><span>WhatsApp Enquiry</span></a>;\n}\n\nfunction SiteChrome() {
+function WhatsAppEnquiry() {
+  const { settings } = useCafe();
+  const digits = (settings.whatsappNumber || settings.phone || "").replace(/\D/g, "");
+  if (!digits) return null;
+  const message = encodeURIComponent(`Hi ${settings.name || "there"}, I have an enquiry.`);
+  return <a href={`https://wa.me/${digits}?text=${message}`} target="_blank" rel="noreferrer" aria-label="WhatsApp enquiry" className="fixed bottom-24 left-3 z-[60] inline-flex items-center gap-2 rounded-full bg-[#16c765] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] sm:bottom-8 sm:left-5"><MessageCircle className="h-5 w-5" /><span>WhatsApp Enquiry</span></a>;
+}
+
+function SiteChrome() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
   return (
