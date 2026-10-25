@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, ShieldCheck, Sparkles, Truck, Star, Plus } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 import { menuService } from "@/services/menuService";
 import type { Category, MenuItem } from "@/lib/types";
 
@@ -24,6 +25,7 @@ const categoryFallbackImages = [
 const productFallbackImage = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85";
 
 function ProductCard({ product, categoryName }: { product: MenuItem; categoryName: string }) {
+  const { addItem, openCart } = useCart();
   return <article className="group min-w-0">
     <Link to="/menu" className="block">
       <div className="relative aspect-[4/4.6] overflow-hidden rounded-2xl bg-[#f4f3ef]">
@@ -33,10 +35,11 @@ function ProductCard({ product, categoryName }: { product: MenuItem; categoryNam
       </div>
       <div className="pt-4">
         <p className="text-[10px] font-semibold uppercase tracking-[.15em] text-[#85857d]">{categoryName}</p>
-        <div className="mt-1.5 flex items-start justify-between gap-2"><h3 className="text-sm font-semibold leading-5 text-[#242521] sm:text-base">{product.name}</h3>{product.rating ? <span className="shrink-0 text-xs text-[#62645c]">★ {product.rating}</span> : null}</div>
+        <div className="mt-1.5 flex items-start justify-between gap-2"><h3 className="text-sm font-semibold leading-5 text-[#242521] sm:text-base">{product.name}</h3><span className="shrink-0 text-[10px] text-[#a0782c]">★ ★ ★ ★ ★ <span className="text-[#62645c]">{Number(product.rating ?? 0) > 0 ? Number(product.rating).toFixed(1) : "New"}</span></span></div>
         <div className="mt-2 flex flex-wrap items-center gap-2"><span className="text-sm font-bold text-[#242521]">₹{product.price.toLocaleString("en-IN")}</span>{product.compareAtPrice && product.compareAtPrice > product.price ? <><span className="text-xs text-[#96968e] line-through">₹{product.compareAtPrice.toLocaleString("en-IN")}</span><span className="text-[9px] font-bold text-[#58755a]">{Math.round((1 - product.price / product.compareAtPrice) * 100)}% OFF</span></> : null}</div>
       </div>
     </Link>
+    <button type="button" onClick={() => { addItem(product); openCart(); }} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2e4031] px-3 py-3 text-xs font-semibold text-white transition hover:bg-[#3c5540]"><Plus className="h-4 w-4" /> Add to cart</button>
   </article>;
 }
 
@@ -63,7 +66,7 @@ function HomePage() {
     <section id="categories" className="border-y border-[#e9e8e1] bg-white py-12 sm:py-16">
       <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-14">
         <div className="mb-8 flex items-center justify-between gap-4 sm:mb-10"><div className="w-full text-center"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#78856c]">Explore the collection</p><h2 className="mt-2 font-serif text-3xl font-normal tracking-[-.025em] text-[#171815] sm:text-4xl">Shop by categories</h2></div><Link to="/menu" className="hidden shrink-0 items-center gap-1 text-xs font-semibold sm:flex">All products <ChevronRight className="h-4 w-4" /></Link></div>
-        {categoriesQuery.isLoading ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[1,2,3,4].map((n) => <div key={n} className="aspect-[.92] animate-pulse rounded-2xl bg-[#eeede7]" />)}</div> : categories.length ? <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{categories.map((category: Category, i) => <Link to="/menu" key={category._id} className="group"><div className="relative aspect-[.92] overflow-hidden rounded-xl bg-[#eeede7] sm:rounded-2xl"><img src={category.image || categoryFallbackImages[i % categoryFallbackImages.length]} alt={category.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" /><span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[10px] font-bold text-[#34352e] sm:left-4 sm:top-4">{String(i + 1).padStart(2, "0")}</span><div className="absolute inset-x-3 bottom-3 text-white sm:inset-x-4 sm:bottom-4"><h3 className="text-sm font-semibold sm:text-lg">{category.name}</h3><p className="mt-1 text-[10px] text-white/80 sm:text-xs">{category.description || "Explore the collection"}</p></div></div></Link>)}</div> : <p className="rounded-2xl border border-dashed border-[#d9d9d0] p-8 text-center text-sm text-[#73746c]">Categories added in Zrcart Studio will appear here.</p>}
+        {categoriesQuery.isLoading ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[1,2,3,4].map((n) => <div key={n} className="aspect-[.92] animate-pulse rounded-2xl bg-[#eeede7]" />)}</div> : categories.length ? <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{categories.map((category: Category, i) => <a href={`/menu?category=${encodeURIComponent(category.slug)}`} key={category._id} className="group"><div className="relative aspect-[.92] overflow-hidden rounded-xl bg-[#eeede7] sm:rounded-2xl"><img src={category.image || categoryFallbackImages[i % categoryFallbackImages.length]} alt={category.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" /><span className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[10px] font-bold text-[#34352e] sm:left-4 sm:top-4">{String(i + 1).padStart(2, "0")}</span><div className="absolute inset-x-3 bottom-3 text-white sm:inset-x-4 sm:bottom-4"><h3 className="text-sm font-semibold sm:text-lg">{category.name}</h3><p className="mt-1 text-[10px] text-white/80 sm:text-xs">{category.description || "Explore the collection"}</p></div></div></a>)}</div> : <p className="rounded-2xl border border-dashed border-[#d9d9d0] p-8 text-center text-sm text-[#73746c]">Categories added in Zrcart Studio will appear here.</p>}
       </div>
     </section>
     <section className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-20 lg:px-14">
