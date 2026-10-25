@@ -12,7 +12,7 @@ import type { AnnouncementAnimation, AnnouncementItem } from "@/lib/types";
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
     meta: [
-      { title: "Store settings — Zrcart Admin" },
+      { title: "Store settings — Admin" },
       { name: "description", content: "Update store details, delivery fee, tax, currency and social links." },
       { property: "og:title", content: "Store settings — Zrcart Admin" },
       { property: "og:description", content: "Manage the store profile used across the storefront." },
