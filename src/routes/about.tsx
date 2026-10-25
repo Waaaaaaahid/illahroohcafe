@@ -7,13 +7,13 @@ import { useCafe } from "@/context/CafeContext";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Ilarooh — Our roastery, kitchen and people" },
+      { title: "About our store" },
       {
         name: "description",
         content:
-          "Since 2016 Ilarooh has roasted single-origin coffee and baked stone-oven plates in Bandra West. Meet the room, the roast and the team.",
+          "Discover our store, our products and the ideas behind our collection.",
       },
-      { property: "og:title", content: "About Ilarooh" },
+      { property: "og:title", content: "About our store" },
       {
         property: "og:description",
         content: "A decade of slow-craft coffee and kitchen work in Bandra West, Mumbai.",
@@ -55,7 +55,7 @@ function AboutPage() {
       <section className="container-page section-padding grid gap-12 lg:grid-cols-2 lg:items-center">
         <img
           src="https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1000&q=80"
-          alt="Guests seated inside the Ilarooh cafe"
+          alt="A welcoming store interior"
           loading="lazy"
           className="aspect-4/3 w-full rounded-[2rem] object-cover shadow-lift"
         />
