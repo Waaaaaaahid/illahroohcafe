@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { menuService } from "@/services/menuService";
 import type { CafeSettings } from "@/lib/types";
 
-/** Neutral Zrcart store fallback while settings load (real values come from the backend). */
+/** Neutral settings shape; the real store identity is supplied by the settings API. */
 const FALLBACK_SETTINGS: CafeSettings = {
   announcementBar: {
     enabled: true,
@@ -14,7 +14,7 @@ const FALLBACK_SETTINGS: CafeSettings = {
       { id: "discover-message", text: "DISCOVER SOMETHING GOOD — SHOP THE LATEST FINDS", enabled: true, order: 1, durationSeconds: 4, animation: "slide", backgroundColor: "#e9ede3", textColor: "#252720", link: "/menu", startsAt: null, endsAt: null },
     ],
   },
-  name: "Zrcart",
+  name: "",
   logo: "",
   description: "Everyday essentials, thoughtfully picked.",
   phone: "",
