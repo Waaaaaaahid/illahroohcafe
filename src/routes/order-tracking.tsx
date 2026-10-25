@@ -15,7 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/order-tracking")({
   validateSearch: (search: Record<string, unknown>): { orderId?: string } => ({ ...(typeof search["orderId"] === "string" ? { orderId: search["orderId"] } : {}) }),
-  head: () => ({ meta: [{ title: "Track your order — Ilarooh" }, { name: "description", content: "Follow your Ilarooh order live from the kitchen pass to your doorstep." }] }),
+  head: () => ({ meta: [{ title: "Track your order" }, { name: "description", content: "Follow your order status and delivery progress." }] }),
   component: OrderTrackingPage,
 });
 
