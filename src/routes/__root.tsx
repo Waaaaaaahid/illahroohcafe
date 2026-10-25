@@ -99,6 +99,7 @@ function SiteChrome() {
       {isAdmin ? null : <Navbar />}
       <main className="flex-1"><Outlet /></main>
       {isAdmin ? null : <Footer />}
+      {isAdmin ? null : <WhatsAppEnquiry />}
       <CartDrawer />
       <ToastViewport />
     </div>
