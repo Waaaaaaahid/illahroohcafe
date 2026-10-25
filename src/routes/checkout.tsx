@@ -38,7 +38,7 @@ declare global {
 }
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout — Ilarooh" }, { name: "description", content: "Enter your delivery details and choose cash or secure online payment." }] }),
+  head: () => ({ meta: [{ title: "Checkout" }, { name: "description", content: "Enter your delivery details and choose cash or secure online payment." }] }),
   component: CheckoutPage,
 });
 
@@ -142,7 +142,7 @@ function CheckoutPage() {
         key: paymentOrder.razorpayKeyId,
         amount: Math.round(paymentOrder.amount * 100),
         currency: paymentOrder.currency,
-        name: settings.name || "Ilarooh",
+        name: settings.name || "Store",
         description: `Order ${orderCode}`,
         order_id: paymentOrder.razorpayOrderId,
         prefill: { name: form.name, email: form.email, contact: form.phone },
