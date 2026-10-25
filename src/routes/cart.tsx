@@ -11,9 +11,9 @@ import { formatCurrency } from "@/utils/format";
 export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
-      { title: "Your cart — Ilarooh" },
-      { name: "description", content: "Review your Ilarooh order, adjust quantities and continue to checkout." },
-      { property: "og:title", content: "Your Ilarooh cart" },
+      { title: "Your cart" },
+      { name: "description", content: "Review your cart, adjust quantities and continue to checkout." },
+      { property: "og:title", content: "Your cart" },
       { property: "og:description", content: "Review your order before checkout." },
     ],
   }),
