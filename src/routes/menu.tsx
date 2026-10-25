@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Search, SlidersHorizontal, Star, ShoppingBag, Plus } from "lucide-react";
+import { ArrowRight, Search, SlidersHorizontal, Star, Plus } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { menuService } from "@/services/menuService";
 import { SORT_OPTIONS, type SortOption } from "@/constants";
