@@ -10,16 +10,16 @@ import { isEmail } from "@/utils/validators";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact Ilarooh — Bandra West, Mumbai" },
+      { title: "Contact our store" },
       {
         name: "description",
         content:
-          "Call, WhatsApp or write to Ilarooh. Find our address, opening hours and reservation details in Bandra West, Mumbai.",
+          "Contact us by phone, WhatsApp or email. Find our store contact details here.",
       },
-      { property: "og:title", content: "Contact Ilarooh" },
+      { property: "og:title", content: "Contact our store" },
       {
         property: "og:description",
-        content: "Address, hours and reservations for Ilarooh, Bandra West.",
+        content: "Store contact information and location details.",
       },
     ],
   }),
@@ -124,7 +124,7 @@ function ContactPage() {
           />
           <div className="overflow-hidden rounded-3xl border border-border bg-secondary/50">
             <iframe
-              title="Ilarooh location map"
+              title="Store location map"
               src="https://www.google.com/maps?q=28.562712,77.290247&z=16&output=embed"
               className="h-56 w-full border-0"
               loading="lazy"
