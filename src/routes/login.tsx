@@ -11,9 +11,9 @@ import { validateLogin, type FieldErrors, type LoginForm } from "@/utils/validat
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Sign in — Zrcart" },
-      { name: "description", content: "Sign in to your Zrcart account to order, track deliveries and view past orders." },
-      { property: "og:title", content: "Sign in to Zrcart" },
+      { title: "Sign in" },
+      { name: "description", content: "Sign in to order, track deliveries and view past orders." },
+      { property: "og:title", content: "Sign in" },
       { property: "og:description", content: "Access your orders, addresses and rewards." },
     ],
   }),
