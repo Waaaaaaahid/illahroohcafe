@@ -35,7 +35,7 @@ export function Navbar() {
           <Link to="/menu" aria-label="Search products" className="flex h-10 w-10 items-center justify-center rounded-full text-[#55574f] transition hover:bg-white"><Search className="h-[18px] w-[18px]" /></Link>
         </div>
         <Link to="/" className="absolute left-1/2 flex -translate-x-1/2 items-center justify-center gap-2.5 whitespace-nowrap" aria-label={`${settings.name || "Store"} home`}>
-          {isLoading ? <span aria-label="Loading store name" className="h-8 w-24 animate-pulse rounded bg-[#eee9e1]" /> : settings.logo ? <img src={settings.logo} alt={settings.name || "Store logo"} className="h-9 max-w-[140px] object-contain" /> : <span className="font-serif text-[1.8rem] font-bold leading-none tracking-[-.055em] text-[#803b36] sm:text-[2rem]">{settings.name || "Store"}</span>}
+          {settings.logo && !isLoading ? <img src={settings.logo} alt={settings.name || "Lumora"} className="h-9 max-w-[140px] object-contain" /> : <span className="font-serif text-[1.8rem] font-bold leading-none tracking-[-.055em] text-[#803b36] sm:text-[2rem]">{isLoading ? "Lumora" : settings.name || "Lumora"}</span>}
         </Link>
         <div className="hidden items-center gap-1 lg:flex">
           {links.map((link) => <Link key={link.label} to={link.to} activeOptions={{ exact: link.to === "/" }} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${pathname === link.to ? "bg-[#e9ede3] text-[#343e2f]" : "text-[#65665e] hover:bg-white hover:text-[#252720]"}`}>{link.label}</Link>)}
