@@ -25,7 +25,7 @@ function AdminMenu() {
   const [form, setForm] = useState<MenuItemFormValues>(emptyMenuItemForm);
   const queryClient = useQueryClient();
   const { notify } = useToast();
-  const menuQuery = useQuery({ queryKey: ["admin-menu"], queryFn: menuService.list });
+  const menuQuery = useQuery({ queryKey: ["admin-menu"], queryFn: adminService.listMenuItems });
   const categoriesQuery = useQuery({ queryKey: ["admin-categories"], queryFn: adminService.listCategories });
   const refreshMenu = () => { void queryClient.invalidateQueries({ queryKey: ["admin-menu"] }); void queryClient.invalidateQueries({ queryKey: ["menu"] }); void queryClient.invalidateQueries({ queryKey: ["categories"] }); void queryClient.invalidateQueries({ queryKey: ["admin-categories"] }); };
   const toggleMutation = useMutation({ mutationFn: (input: { id: string; available: boolean }) => adminService.toggleAvailability(input.id, input.available), onSuccess: () => { refreshMenu(); notify("Availability updated", { variant: "success" }); }, onError: () => notify("Couldn't update availability", { variant: "error" }) });
