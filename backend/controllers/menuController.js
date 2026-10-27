@@ -42,6 +42,15 @@ const getMenuItems = asyncHandler(async (req, res) => {
   return success(res, 200, visibleItems.map((item) => toClientItem(item, ratings.get(String(item._id)) ?? 0)));
 });
 
+
+// Admin catalog list: include products even when their category is inactive,
+// so admins can still manage and reassign them.
+const getAdminMenuItems = asyncHandler(async (_req, res) => {
+  const menuItems = await MenuItem.find({}).populate('category').sort({ createdAt: -1 });
+  const ratings = await ratingMapFor(menuItems);
+  return success(res, 200, menuItems.map((item) => toClientItem(item, ratings.get(String(item._id)) ?? 0)));
+});
+
 const createMenuItem = asyncHandler(async (req, res) => {
   const categoryId = await resolveCategoryId(req.body.category);
   if (!categoryId) return error(res, 400, 'Category not found');
@@ -89,4 +98,4 @@ const updateAvailability = asyncHandler(async (req, res) => {
   return success(res, 200, toClientItem(menuItem, ratings.get(String(menuItem._id)) ?? 0), 'Availability updated');
 });
 
-module.exports = { getMenuItems, createMenuItem, getMenuItemById, updateMenuItem, deleteMenuItem, updateAvailability };
+module.exports = { getMenuItems, getAdminMenuItems, createMenuItem, getMenuItemById, updateMenuItem, deleteMenuItem, updateAvailability };
