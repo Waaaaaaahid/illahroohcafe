@@ -41,6 +41,8 @@ const upload = multer({
   },
 });
 
+router.get('/admin', protect, admin, menuController.getAdminMenuItems);
+
 router
   .route('/')
   .get(menuController.getMenuItems)
