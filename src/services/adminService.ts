@@ -17,6 +17,7 @@ export interface AdminStats {
 /** Admin-only mutations. Backend guards these with auth + admin middleware. */
 export const adminService = {
   getStats: () => api.get<AdminStats>("/admin/stats"),
+  listMenuItems: () => api.get<MenuItem[]>("/menu/admin"),
   createMenuItem: (input: Omit<MenuItem, "_id" | "createdAt" | "updatedAt">) => api.post<MenuItem>("/menu", input),
   updateMenuItem: (id: string, input: Partial<MenuItem>) => api.put<MenuItem>(`/menu/${id}`, input),
   deleteMenuItem: (id: string) => api.delete<{ _id: string }>(`/menu/${id}`),
