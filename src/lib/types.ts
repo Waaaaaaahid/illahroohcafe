@@ -148,6 +148,8 @@ export interface CafeSettings {
   taxPercentage: number;
   currency: string;
   whatsappNumber: string;
+  whatsappSalesNumber: string;
+  whatsappSupportNumber: string;
 }
 
 export interface AuthSession {
