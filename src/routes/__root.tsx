@@ -96,15 +96,12 @@ function WhatsAppEnquiry() {
     };
     window.addEventListener("keydown", onKeyDown);
     document.addEventListener("click", onClickOutside);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("click", onClickOutside);
-    };
+    return () => { window.removeEventListener("keydown", onKeyDown); document.removeEventListener("click", onClickOutside); };
   }, [open]);
 
   const contacts = [
-    { title: "Sales & Enquiries", description: "Products, pricing & new orders", number: settings.whatsappSalesNumber || settings.whatsappNumber || settings.phone, message: `Hi ${settings.name || "Zrcart"}, I have a sales enquiry.`, Icon: ShoppingBag },
-    { title: "Customer Support", description: "Existing orders & assistance", number: settings.whatsappSupportNumber, message: `Hi ${settings.name || "Zrcart"}, I need customer support.`, Icon: Headset },
+    { title: "Sales & Enquiries", number: settings.whatsappSalesNumber || settings.whatsappNumber || settings.phone, message: `Hi ${settings.name || "Zrcart"}, I have a sales enquiry.`, Icon: ShoppingBag },
+    { title: "Customer Support", number: settings.whatsappSupportNumber, message: `Hi ${settings.name || "Zrcart"}, I need customer support.`, Icon: Headset },
   ];
   const openChat = (number: string, message: string) => {
     const digits = number.replace(/\D/g, "");
@@ -113,42 +110,37 @@ function WhatsAppEnquiry() {
     setOpen(false);
   };
 
-  return <div data-whatsapp-enquiry className="fixed bottom-24 left-3 z-[60] sm:bottom-8 sm:left-5">
+  return <div data-whatsapp-enquiry className="fixed bottom-20 left-3 z-[60] sm:bottom-7 sm:left-5">
     <AnimatePresence>
       {open && <motion.div
-        initial={{ opacity: 0, x: -18, scale: .98 }}
-        animate={{ opacity: 1, x: 0, scale: 1 }}
-        exit={{ opacity: 0, x: -12, scale: .98 }}
-        transition={{ duration: .24, ease: "easeOut" }}
-        className="absolute bottom-0 left-[calc(100%+14px)] flex w-[min( calc(100vw-100px), 350px)] min-w-[260px] flex-col gap-3"
-        style={{ width: "min(350px, calc(100vw - 92px))" }}
+        initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+        transition={{ duration: .2, ease: "easeOut" }}
+        className="absolute bottom-0 left-[calc(100%+9px)] flex flex-col gap-2 sm:left-[calc(100%+14px)] sm:gap-3"
+        style={{ width: "max-content", maxWidth: "calc(100vw - 82px)" }}
       >
-        {contacts.map(({ title, description, number, message, Icon }, index) => {
+        {contacts.map(({ title, number, message, Icon }, index) => {
           const available = Boolean(number?.replace(/\D/g, ""));
           return <motion.button key={title} type="button" disabled={!available}
             onClick={() => openChat(number || "", message)}
-            initial={{ opacity: 0, x: 28 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: .05 + index * .08, duration: .25 }}
-            className="group flex w-full items-center gap-3 rounded-full border border-white/80 bg-white px-4 py-3.5 text-left shadow-[0_8px_30px_rgba(0,0,0,.18)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_34px_rgba(0,0,0,.22)] disabled:cursor-not-allowed disabled:opacity-60"
+            initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: .04 + index * .06, duration: .2 }}
+            className="group flex min-h-11 w-full items-center gap-2 rounded-full border border-white/90 bg-white px-3 py-2 text-left shadow-[0_4px_16px_rgba(0,0,0,.15)] transition hover:shadow-[0_7px_20px_rgba(0,0,0,.18)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:gap-3 sm:px-4 sm:py-2.5"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eaf7ef] text-[#078447]"><Icon className="h-5 w-5" strokeWidth={2.2} /></span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold text-[#22251f]">{title}</span>
-              <span className="mt-0.5 block text-[11px] leading-4 text-[#777b73]">{available ? description : "Set this number in Admin Settings"}</span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#eaf7ef] text-[#078447] sm:h-8 sm:w-8">
+              <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.1} />
             </span>
-            <ArrowUpRight className="h-4 w-4 shrink-0 text-[#078447] transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <span className="whitespace-nowrap text-[11px] font-semibold text-[#22251f] sm:text-sm">{title}</span>
+            <ArrowUpRight className="ml-0.5 h-3 w-3 shrink-0 text-[#078447] sm:ml-1 sm:h-4 sm:w-4" />
           </motion.button>;
         })}
       </motion.div>}
     </AnimatePresence>
     <button type="button" onClick={() => setOpen((value) => !value)}
-      aria-label={open ? "Close WhatsApp contacts" : "Open WhatsApp contacts"}
-      aria-expanded={open}
-      className="flex h-[58px] items-center gap-2.5 rounded-full bg-[#00c853] px-4 text-white shadow-[0_8px_28px_rgba(0,200,83,.35)] transition duration-200 hover:scale-[1.04] hover:bg-[#00b84a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] focus-visible:ring-offset-2"
+      aria-label={open ? "Close WhatsApp contacts" : "Open WhatsApp contacts"} aria-expanded={open}
+      className="flex h-11 items-center gap-2 rounded-full bg-[#00c853] px-3 text-white shadow-[0_5px_18px_rgba(0,200,83,.3)] transition hover:bg-[#00b84a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] focus-visible:ring-offset-2 sm:h-12 sm:gap-2.5 sm:px-4"
     >
-      {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
-      <span className="text-sm font-semibold">WhatsApp Enquiry</span>
+      {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
+      <span className="text-xs font-semibold sm:text-sm">WhatsApp Enquiry</span>
     </button>
   </div>;
 }
