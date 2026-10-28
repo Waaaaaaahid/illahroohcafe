@@ -8,8 +8,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
-import { MessageCircle } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { MessageCircle, X, ShoppingBag, Headset, ArrowUpRight } from "lucide-react";
 import { useCafe } from "@/context/CafeContext";
 
 import appCss from "../styles.css?url";
@@ -85,15 +86,56 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function WhatsAppEnquiry() {
   const { settings } = useCafe();
-  const digits = (settings.whatsappNumber || settings.phone || "").replace(/\D/g, "");
-  const message = encodeURIComponent(`Hi ${settings.name || "there"}, I have an enquiry.`);
-  const href = digits ? `https://wa.me/${digits}?text=${message}` : `https://wa.me/?text=${message}`;
-  return <a href={href} target="_blank" rel="noreferrer" aria-label="WhatsApp enquiry" className="fixed bottom-24 left-3 z-[60] inline-flex items-center gap-2 rounded-xl bg-[#00c853] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] hover:bg-[#00b84a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] focus-visible:ring-offset-2 sm:bottom-8 sm:left-5">
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-current"><path d="M20.52 3.48A11.78 11.78 0 0 0 12.13 0C5.55 0 .2 5.35.2 11.93c0 2.1.55 4.15 1.6 5.96L.1 24l6.27-1.64a11.9 11.9 0 0 0 5.75 1.47h.01c6.58 0 11.93-5.35 11.93-11.93 0-3.19-1.24-6.19-3.54-8.42ZM12.13 21.8h-.01a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.72.98.99-3.63-.24-.37a9.84 9.84 0 0 1-1.51-5.26c0-5.46 4.45-9.91 9.9-9.91a9.83 9.83 0 0 1 7.01 2.91 9.84 9.84 0 0 1 2.9 7c0 5.46-4.44 9.9-9.92 9.9Zm5.43-7.42c-.3-.15-1.77-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.78.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.27-.47-2.42-1.5-.9-.8-1.51-1.78-1.69-2.08-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.68-1.63-.93-2.23-.24-.58-.49-.5-.68-.51h-.58c-.2 0-.52.07-.8.37-.28.3-1.04 1.02-1.04 2.49s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35Z"/></svg>
-    <span>WhatsApp Enquiry</span>
-  </a>;
-}
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
+  const contacts = [
+    { title: "Sales & Enquiries", description: "Product questions, pricing and new orders.", number: settings.whatsappSalesNumber || settings.whatsappNumber || settings.phone, message: `Hi ${settings.name || "Zrcart"}, I have a sales enquiry.`, Icon: ShoppingBag },
+    { title: "Customer Support", description: "Help with existing orders and other issues.", number: settings.whatsappSupportNumber, message: `Hi ${settings.name || "Zrcart"}, I need customer support.`, Icon: Headset },
+  ];
+  const openChat = (number: string, message: string) => {
+    const digits = number.replace(/\D/g, "");
+    if (!digits) return;
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    setOpen(false);
+  };
+  return <>
+    <button type="button" onClick={() => setOpen(true)} aria-label="Choose WhatsApp enquiry contact" aria-haspopup="dialog" aria-expanded={open}
+      className="fixed bottom-24 left-3 z-[60] inline-flex items-center gap-2 rounded-xl bg-[#00c853] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] hover:bg-[#00b84a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] focus-visible:ring-offset-2 sm:bottom-8 sm:left-5">
+      <MessageCircle className="h-5 w-5" /><span>WhatsApp Enquiry</span>
+    </button>
+    <AnimatePresence>
+      {open && <>
+        <motion.button type="button" aria-label="Close WhatsApp contact chooser" onClick={() => setOpen(false)} className="fixed inset-0 z-[70] cursor-default bg-black/40 backdrop-blur-[3px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+        <div className="fixed inset-0 z-[71] flex items-end justify-center p-3 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="whatsapp-enquiry-title">
+          <motion.div initial={{ opacity: 0, y: 22, scale: .97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: .98 }} transition={{ duration: .22, ease: "easeOut" }} className="w-full max-w-md overflow-hidden rounded-[28px] border border-white/70 bg-[#fbfaf7] p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#65745b]">We’re here to help</p><h2 id="whatsapp-enquiry-title" className="mt-1 font-display text-2xl font-semibold text-[#242521]">How can we help you?</h2><p className="mt-2 text-sm text-[#72736b]">Choose the right team to start your WhatsApp chat.</p></div>
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#55574f] ring-1 ring-black/5 transition hover:bg-[#eeeee7]"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="mt-5 space-y-3">
+              {contacts.map(({ title, description, number, message, Icon }, index) => {
+                const available = Boolean(number?.replace(/\D/g, ""));
+                return <motion.button key={title} type="button" disabled={!available} onClick={() => openChat(number || "", message)} initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .07 + index * .1, duration: .28 }}
+                  className="group flex w-full items-center gap-4 rounded-2xl border border-[#e7e6de] bg-white p-4 text-left shadow-[0_4px_16px_rgba(30,32,26,.03)] transition hover:-translate-y-0.5 hover:border-[#b6c5a9] hover:shadow-[0_10px_28px_rgba(30,32,26,.08)] disabled:cursor-not-allowed disabled:opacity-50">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#edf2e8] text-[#4c6544]"><Icon className="h-5 w-5" /></span>
+                  <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[#282a24]">{title}</span><span className="mt-1 block text-xs leading-5 text-[#77786f]">{description}</span>{!available && <span className="mt-1 block text-[10px] font-medium text-[#a05c48]">Contact not configured yet</span>}</span>
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-[#8a8c82] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#4c6544]" />
+                </motion.button>;
+              })}
+            </div>
+            <p className="mt-4 flex items-center justify-center gap-2 text-[11px] text-[#888980]"><MessageCircle className="h-3.5 w-3.5 text-[#25a75a]" /> Opens a private chat in WhatsApp</p>
+          </motion.div>
+        </div>
+      </>}
+    </AnimatePresence>
+  </>;
+}
 function SiteChrome() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
