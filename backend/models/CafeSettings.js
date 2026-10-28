@@ -61,6 +61,8 @@ const cafeSettingsSchema = new mongoose.Schema(
     taxPercentage: { type: Number, default: 0 },
     currency: { type: String, default: 'INR' },
     whatsappNumber: { type: String },
+    whatsappSalesNumber: { type: String, default: '' },
+    whatsappSupportNumber: { type: String, default: '' },
     announcementBar: { type: announcementBarSchema, default: () => ({}) },
   },
   { timestamps: true }
