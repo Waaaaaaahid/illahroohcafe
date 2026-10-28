@@ -95,7 +95,7 @@ function WhatsAppEnquiry() {
   }, [open]);
 
   const contacts = [
-    { title: "Sales & Enquiries", description: "Product questions, pricing and new orders.", number: settings.whatsappSalesNumber || settings.whatsappNumber || settings.phone, message: `Hi ${settings.name || "Zrcart"}, I have a sales enquiry.`, Icon: ShoppingBag },
+    { title: "WhatsApp Enquiry", description: "Product questions, pricing and new orders.", number: settings.whatsappSalesNumber, message: `Hi ${settings.name || "Zrcart"}, I have a sales enquiry.`, Icon: ShoppingBag },
     { title: "Customer Support", description: "Help with existing orders and other issues.", number: settings.whatsappSupportNumber, message: `Hi ${settings.name || "Zrcart"}, I need customer support.`, Icon: Headset },
   ];
   const openChat = (number: string, message: string) => {
@@ -106,7 +106,8 @@ function WhatsAppEnquiry() {
   };
   return <>
     <button type="button" onClick={() => setOpen(true)} aria-label="Choose WhatsApp enquiry contact" aria-haspopup="dialog" aria-expanded={open}
-      className="fixed bottom-24 left-3 z-[60] inline-flex items-center gap-2 rounded-xl bg-[#00c853] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] hover:bg-[#00b84a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] focus-visible:ring-offset-2 sm:bottom-8 sm:left-5">
+      onMouseEnter={() => { if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setOpen(true); }}
+      className="fixed bottom-24 left-3 z-[60] inline-flex items-center gap-2 rounded-xl bg-[#00c853] px-4 py-3 text-sm font-semibold text-white shadow-lg transition duration-200 hover:scale-[1.04] hover:bg-[#00b84a] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] focus-visible:ring-offset-2 sm:bottom-8 sm:left-5">
       <MessageCircle className="h-5 w-5" /><span>WhatsApp Enquiry</span>
     </button>
     <AnimatePresence>
