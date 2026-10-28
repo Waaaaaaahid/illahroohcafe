@@ -26,6 +26,8 @@ const FALLBACK_SETTINGS: CafeSettings = {
   taxPercentage: 5,
   currency: "INR",
   whatsappNumber: "",
+  whatsappSalesNumber: "",
+  whatsappSupportNumber: "",
 };
 
 interface CafeContextValue {
