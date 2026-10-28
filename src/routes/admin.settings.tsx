@@ -139,8 +139,14 @@ function StoreSettingsPage() {
             <Field id="s-email" label="Email">
               <TextInput id="s-email" type="email" value={form.email} onChange={(e) => updateForm({ ...form, email: e.target.value })} />
             </Field>
-            <Field id="s-wa" label="WhatsApp number">
-              <TextInput id="s-wa" value={form.whatsappNumber} onChange={(e) => updateForm({ ...form, whatsappNumber: e.target.value })} />
+            <Field id="s-wa-sales" label="Sales & Enquiries WhatsApp" hint="Include country code, e.g. 919876543210">
+              <TextInput id="s-wa-sales" inputMode="tel" value={form.whatsappSalesNumber || ""} onChange={(e) => updateForm({ ...form, whatsappSalesNumber: e.target.value })} placeholder="919876543210" />
+            </Field>
+            <Field id="s-wa-support" label="Customer Support WhatsApp" hint="Include country code, e.g. 919876543210">
+              <TextInput id="s-wa-support" inputMode="tel" value={form.whatsappSupportNumber || ""} onChange={(e) => updateForm({ ...form, whatsappSupportNumber: e.target.value })} placeholder="919876543210" />
+            </Field>
+            <Field id="s-wa" label="Legacy / fallback WhatsApp number" hint="Used only if Sales number is empty">
+              <TextInput id="s-wa" inputMode="tel" value={form.whatsappNumber} onChange={(e) => updateForm({ ...form, whatsappNumber: e.target.value })} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field id="s-ig" label="Instagram">
