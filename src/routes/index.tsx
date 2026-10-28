@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, ShieldCheck, Sparkles, Truck, Star, Plus } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -43,6 +44,85 @@ function ProductCard({ product, categoryName }: { product: MenuItem; categoryNam
   </article>;
 }
 
+const heroSlides = [
+  {
+    image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2000&q=90",
+    eyebrow: "The everyday edit",
+    title: <>Make your space<br /><span className="italic">feel like you.</span></>,
+    description: "Discover beautiful finds for your home, everyday living and more.",
+    position: "center",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?auto=format&fit=crop&w=2000&q=90",
+    eyebrow: "Thoughtful finds",
+    title: <>Little things.<br /><span className="italic">Better living.</span></>,
+    description: "Useful essentials and lovely details for your everyday routine.",
+    position: "center",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=2000&q=90",
+    eyebrow: "Make it yours",
+    title: <>Find your<br /><span className="italic">everyday favourite.</span></>,
+    description: "Explore the collection and find something you'll love.",
+    position: "center",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2000&q=90",
+    eyebrow: "A better everyday",
+    title: <>Good design.<br /><span className="italic">Everyday comfort.</span></>,
+    description: "Fresh finds for the spaces and moments that matter.",
+    position: "center",
+  },
+];
+
+function HeroCarousel() {
+  const [active, setActive] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActive((current) => (current + 1) % heroSlides.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const goTo = (index: number) => setActive((index + heroSlides.length) % heroSlides.length);
+  const onTouchStart = (event: React.TouchEvent<HTMLElement>) => { touchStartX.current = event.touches[0]?.clientX ?? null; };
+  const onTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    if (touchStartX.current === null) return;
+    const distance = (event.changedTouches[0]?.clientX ?? touchStartX.current) - touchStartX.current;
+    if (Math.abs(distance) > 45) goTo(active + (distance < 0 ? 1 : -1));
+    touchStartX.current = null;
+  };
+
+  return <section
+    aria-roledescription="carousel"
+    aria-label="Featured collections"
+    onTouchStart={onTouchStart}
+    onTouchEnd={onTouchEnd}
+    className="relative h-[min(66vh,600px)] min-h-[340px] w-full overflow-hidden bg-[#e8e2d6] sm:h-[min(74vh,680px)] sm:min-h-[460px] lg:h-[min(78vh,760px)]"
+  >
+    {heroSlides.map((slide, index) => <div
+      key={slide.image}
+      aria-hidden={index !== active}
+      className={`absolute inset-0 transition-transform duration-700 ease-in-out ${index === active ? "translate-x-0" : index === (active + heroSlides.length - 1) % heroSlides.length ? "-translate-x-full" : "translate-x-full"}`}
+    >
+      <img src={slide.image} alt="" fetchPriority={index === 0 ? "high" : "auto"} loading={index === 0 ? "eager" : "lazy"} className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: slide.position }} />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/15" />
+      <div className="absolute bottom-16 left-5 right-5 sm:bottom-20 sm:left-10 sm:right-10 lg:bottom-24 lg:left-16">
+        <p className="mb-2 text-[9px] font-bold uppercase tracking-[.22em] text-white/85 sm:mb-3 sm:text-[10px]">{slide.eyebrow}</p>
+        <h1 className="max-w-2xl font-serif text-3xl leading-[1.06] tracking-[-.035em] text-white sm:text-6xl lg:text-7xl">{slide.title}</h1>
+        <p className="mt-3 max-w-md text-xs leading-5 text-white/90 sm:mt-4 sm:text-base sm:leading-6">{slide.description}</p>
+        <Link to="/menu" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#263b2b] px-5 py-3 text-xs font-medium text-white transition hover:bg-[#344d39] sm:mt-6 sm:gap-3 sm:rounded-xl sm:px-7 sm:py-4 sm:text-sm">Shop now <ArrowRight className="h-4 w-4" /></Link>
+      </div>
+    </div>)}
+    <div className="absolute bottom-4 right-5 z-10 flex items-center gap-2.5 sm:bottom-6 sm:right-10" role="group" aria-label="Choose featured slide">
+      {heroSlides.map((slide, index) => <button key={slide.image} type="button" onClick={() => goTo(index)} aria-label={`Go to slide ${index + 1}`} aria-current={index === active ? "true" : undefined}
+        className={`h-2 rounded-full transition-all duration-300 ${index === active ? "w-6 bg-white" : "w-2 bg-white/55 hover:bg-white/80"}`} />)}
+    </div>
+  </section>;
+}
+
 function HomePage() {
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: menuService.categories });
   const productsQuery = useQuery({ queryKey: ["menu"], queryFn: menuService.list });
@@ -52,17 +132,7 @@ function HomePage() {
   const displayProducts = featuredProducts.length ? featuredProducts : products.slice(0, 4);
 
   return <div className="bg-[#fbfaf7] text-[#242521]">
-    <section className="relative h-[min(74vh,680px)] min-h-[390px] w-full overflow-hidden bg-[#e8e2d6] sm:min-h-[500px] lg:h-[min(78vh,760px)]">
-      <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2000&q=90" alt="A warm, thoughtfully styled modern home" className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/10" />
-      <div className="absolute bottom-12 left-6 right-6 sm:bottom-16 sm:left-10 lg:bottom-20 lg:left-16">
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-[.24em] text-white/85">The everyday edit</p>
-        <h1 className="max-w-2xl font-serif text-4xl leading-[1.04] tracking-[-.035em] text-white sm:text-6xl lg:text-7xl">Make your space<br /><span className="italic">feel like you.</span></h1>
-        <p className="mt-4 max-w-md text-sm leading-6 text-white/85 sm:text-base">Discover beautiful finds for your home, everyday living and more.</p>
-        <Link to="/menu" className="mt-6 inline-flex items-center gap-3 rounded-xl bg-[#263b2b] px-7 py-4 text-sm font-medium text-white transition hover:bg-[#344d39]">Shop now <ArrowRight className="h-4 w-4" /></Link>
-      </div>
-      <div className="absolute bottom-5 right-6 flex items-center gap-2 sm:right-10"><span className="h-2 w-2 rounded-full bg-white"></span><span className="h-2 w-2 rounded-full bg-white/50"></span><span className="h-2 w-2 rounded-full bg-white/50"></span></div>
-    </section>
+    <HeroCarousel />
     <section id="categories" className="border-y border-[#e9e8e1] bg-white py-12 sm:py-16">
       <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-14">
         <div className="mb-8 flex items-center justify-between gap-4 sm:mb-10"><div className="w-full text-center"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#78856c]">Explore the collection</p><h2 className="mt-2 font-serif text-3xl font-normal tracking-[-.025em] text-[#171815] sm:text-4xl">Shop by categories</h2></div><Link to="/menu" className="hidden shrink-0 items-center gap-1 text-xs font-semibold sm:flex">All products <ChevronRight className="h-4 w-4" /></Link></div>
