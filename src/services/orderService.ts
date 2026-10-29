@@ -13,6 +13,7 @@ export const orderService = {
   listMine: (_userId: string) => api.get<Order[]>("/orders/my"),
   listAll: () => api.get<Order[]>("/orders"),
   get: (orderId: string) => api.get<Order>(`/orders/${orderId}`),
+  trackByReference: (code: string, phone: string) => api.post<Order>("/orders/track", { code, phone }),
   updateStatus: (orderId: string, orderStatus: OrderStatus) => api.put<Order>(`/orders/${orderId}/status`, { orderStatus }),
   subscribeOrder: (orderId: string, onOrder: (order: Order) => void): (() => void) => {
     let closed = false; let controller: AbortController | undefined; let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
