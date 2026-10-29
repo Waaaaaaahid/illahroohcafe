@@ -7,6 +7,7 @@ const { admin } = require('../middleware/adminMiddleware');
 const { validate, orderRules } = require('../middleware/validationMiddleware');
 
 router.get('/my', protect, orderController.getMyOrders);
+router.post('/track', orderController.trackOrderByReference);
 router.get('/admin/events', protect, admin, orderController.subscribeToAdminOrders);
 router.post('/', protect, orderRules, validate, orderController.createOrder);
 router.get('/', protect, admin, orderController.getOrders);
