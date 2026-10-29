@@ -1,26 +1,22 @@
 // backend/api/index.js
 // Vercel serverless entry — the whole Express app runs as one function.
+// Keep request handling lightweight: catalog seeding is a deployment/setup task,
+// not something to run before serving requests on every new serverless instance.
 const app = require('../server');
 const connectDB = require('../config/db');
-const ensureMenuSeeded = require('../scripts/ensureMenuSeeded');
 
 let dbReady = null;
-let menuReady = null;
 
 module.exports = async (req, res) => {
   try {
     if (!dbReady) {
-      dbReady = connectDB();
-    }
-    await dbReady;
-
-    if (!menuReady) {
-      menuReady = ensureMenuSeeded().catch((error) => {
-        menuReady = null;
+      dbReady = connectDB().catch((error) => {
+        // Allow a later request to retry if the initial DB connection fails.
+        dbReady = null;
         throw error;
       });
     }
-    await menuReady;
+    await dbReady;
 
     return app(req, res);
   } catch (error) {
