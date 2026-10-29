@@ -17,13 +17,24 @@ async function ensureMenuSeeded() {
   const migrations = mongoose.connection.collection('catalogmigrations');
   const migrationKey = 'zrcart-commerce-catalog-v3';
   const existingMigration = await migrations.findOne({ _id: migrationKey });
+
+  // Do not trust the migration marker alone: an earlier partial deployment may
+  // have written it while the catalog was later emptied or pointed at a fresh DB.
+  // Skip only when the expected seed products and active categories are actually present.
   if (existingMigration) {
-    return {
-      items: existingMigration.seededProductCount ?? PRODUCTS.length,
-      categories: existingMigration.activeCategorySlugs?.length ?? CATEGORIES.length,
-      migrationApplied: false,
-      skipped: true,
-    };
+    const [seededProductCount, activeCategoryCount] = await Promise.all([
+      MenuItem.countDocuments({ sku: { $in: PRODUCTS.map((product) => product.sku) } }),
+      Category.countDocuments({ slug: { $in: CATEGORIES.map((category) => category.slug) }, active: true }),
+    ]);
+
+    if (seededProductCount >= PRODUCTS.length && activeCategoryCount >= CATEGORIES.length) {
+      return {
+        items: seededProductCount,
+        categories: activeCategoryCount,
+        migrationApplied: false,
+        skipped: true,
+      };
+    }
   }
 
   const categoryIds = new Map();
