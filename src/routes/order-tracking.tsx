@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -24,38 +24,78 @@ function OrderTrackingPage() {
   const { settings } = useCafe();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [reference, setReference] = useState(orderId ?? "");
-  const [active, setActive] = useState(orderId ?? "");
-  const query = useQuery({ queryKey: ["order", active], queryFn: () => orderService.get(active), enabled: Boolean(active) });
+  const [reference, setReference] = useState("");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [activeCode, setActiveCode] = useState("");
+  const [activePhone, setActivePhone] = useState("");
+  const [activeId, setActiveId] = useState(orderId ?? "");
+
+  const query = useQuery({
+    queryKey: ["order-tracking", activeId, activeCode, activePhone],
+    queryFn: () => activeId ? orderService.get(activeId) : orderService.trackByReference(activeCode, activePhone),
+    enabled: Boolean(activeId || (activeCode && activePhone)),
+    retry: false,
+  });
+  const ordersQuery = useQuery({
+    queryKey: ["my-orders", user?._id],
+    queryFn: () => orderService.listMine(user?._id ?? ""),
+    enabled: Boolean(user?._id),
+  });
 
   useEffect(() => {
-    if (!active) return;
-    return orderService.subscribeOrder(active, (updatedOrder) => queryClient.setQueryData(["order", active], updatedOrder));
-  }, [active, queryClient]);
+    if (!query.data?._id) return;
+    return orderService.subscribeOrder(query.data._id, (updatedOrder) => {
+      queryClient.setQueryData(["order-tracking", activeId, activeCode, activePhone], updatedOrder);
+    });
+  }, [query.data?._id, activeId, activeCode, activePhone, queryClient]);
 
   const order = query.data;
-  const orderStatus = order?.orderStatus;
-  const currentIndex = order && orderStatus ? ORDER_STATUS_FLOW.indexOf(orderStatus) : -1;
+  const currentIndex = order ? ORDER_STATUS_FLOW.indexOf(order.orderStatus) : -1;
+  const submitTracking = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setActiveId("");
+    setActiveCode(reference.trim().toUpperCase());
+    setActivePhone(phone.replace(/\\D/g, ""));
+  };
 
   return (
-    <div className="container-page py-14">
-      <h1 className="font-display text-4xl font-semibold">Track your order</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Enter your order reference (for example MN-10241).</p>
-      <form className="mt-8 flex max-w-lg flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(event) => { event.preventDefault(); setActive(reference.trim()); }}>
-        <div className="flex-1"><Field id="tracking-ref" label="Order reference"><TextInput id="tracking-ref" value={reference} onChange={(event) => setReference(event.target.value)} placeholder="MN-10241" /></Field></div>
-        <Button type="submit" size="md"><PackageSearch className="size-4" /> Track</Button>
-      </form>
+    <div className="container-page py-10 sm:py-14">
+      <div className="mx-auto max-w-4xl">
+        <p className="eyebrow text-accent">LUMORACURIO ORDER CARE</p>
+        <h1 className="mt-2 font-display text-4xl font-semibold sm:text-5xl">Track your order</h1>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">Your order, every step of the way. Enter the reference from your confirmation and the phone number used at checkout.</p>
+        <form className="mt-8 grid gap-4 rounded-3xl border border-border bg-card p-5 shadow-soft sm:grid-cols-[1fr_1fr_auto] sm:items-end sm:p-7" onSubmit={submitTracking}>
+          <Field id="tracking-ref" label="Order reference">
+            <TextInput id="tracking-ref" value={reference} onChange={(event) => setReference(event.target.value.toUpperCase())} placeholder="LUM-A1B2C3-D4E5F6" required autoCapitalize="characters" />
+          </Field>
+          <Field id="tracking-phone" label="Checkout phone number">
+            <TextInput id="tracking-phone" type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Phone number used for order" required />
+          </Field>
+          <Button type="submit" size="lg" disabled={!reference.trim() || phone.replace(/\\D/g, "").length < 7}><PackageSearch className="size-4" /> Track order</Button>
+          <p className="text-xs text-muted-foreground sm:col-span-3">For your privacy, both the reference number and registered phone number must match.</p>
+        </form>
 
-      <div className="mt-10 max-w-3xl">
-        {!active ? <EmptyState title="Nothing to track yet" description="Paste an order reference above to see live kitchen and delivery status." /> : query.isLoading ? <div className="space-y-3"><Skeleton className="h-8 w-48" /><Skeleton className="h-40 w-full rounded-3xl" /></div> : query.isError || !order ? <ErrorState title="Order not found" description="Double-check the reference, or contact us and we'll find it." onRetry={() => void query.refetch()} /> : (
-          <div className="rounded-3xl border border-border bg-card p-7 shadow-soft sm:p-9">
-            <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Reference</p><p className="font-display text-2xl font-semibold">{order.code}</p><p className="mt-1 text-xs text-muted-foreground">Placed {formatDateTime(order.createdAt)}</p></div><span className={`rounded-full px-4 py-1.5 text-xs font-semibold ${order.orderStatus === "Cancelled" ? "bg-destructive/10 text-destructive" : statusBadgeColor[order.orderStatus]}`}>{order.orderStatus}</span></div>
-            {order.orderStatus === "Cancelled" ? <p className="mt-8 rounded-2xl bg-destructive/8 p-5 text-sm text-muted-foreground">This order was cancelled. If that's unexpected, call {settings.phone}.</p> : order.orderStatus === "Completed" ? <><DeliveredCelebration /><div className="mt-8 border-t border-border pt-8">{user ? <RatingSection orderId={order._id} /> : <p className="text-center text-sm text-muted-foreground">Log in to rate your order.</p>}</div></> : (
-              <ol className="mt-9 space-y-0">{ORDER_STATUS_FLOW.map((status, index) => { const done = index <= currentIndex; const isLast = index === ORDER_STATUS_FLOW.length - 1; return <li key={status} className="flex gap-4"><div className="flex flex-col items-center"><span className={`flex size-9 items-center justify-center rounded-full border-2 ${done ? "border-transparent bg-amber-gradient text-accent-foreground" : "border-border bg-card text-muted-foreground"}`}>{done ? <Check className="size-4" /> : <span className="size-2 rounded-full bg-current" />}</span>{!isLast ? <span className={`w-0.5 flex-1 ${index < currentIndex ? "bg-accent" : "bg-border"}`} /> : null}</div><div className={`pb-8 ${isLast ? "pb-0" : ""}`}><p className={`text-sm font-semibold ${done ? "" : "text-muted-foreground"}`}>{status}</p><p className="mt-1 text-xs text-muted-foreground">{statusCopy[status]}</p></div></li>; })}</ol>
-            )}
-            <div className="mt-8 grid gap-4 border-t border-border pt-6 sm:grid-cols-2"><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Delivering to</p><p className="mt-1 text-sm">{order.customerDetails.address}</p></div><div className="sm:text-right"><p className="text-xs uppercase tracking-wider text-muted-foreground">Total</p><p className="mt-1 font-display text-xl font-semibold">{formatCurrency(order.totalAmount, settings.currency)}</p><p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground sm:justify-end"><Truck className="size-3.5" />{order.paymentMethod === "cod" ? "Cash on delivery" : "Paid online"}</p></div></div>
+        {activeCode || activeId ? <div className="mt-8 max-w-3xl">
+          {query.isLoading ? <div className="space-y-3"><Skeleton className="h-8 w-48" /><Skeleton className="h-40 w-full rounded-3xl" /></div> : query.isError || !order ? <ErrorState title="We couldn't find that order" description="Check the reference and registered phone number, then try again." onRetry={() => void query.refetch()} /> : (
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-9">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div><p className="text-xs uppercase tracking-wider text-muted-foreground">Your reference number</p><p className="mt-1 font-display text-2xl font-semibold tracking-wide">{order.code}</p><p className="mt-1 text-xs text-muted-foreground">Placed {formatDateTime(order.createdAt)}</p></div>
+                <span className={`rounded-full px-4 py-1.5 text-xs font-semibold ${order.orderStatus === "Cancelled" ? "bg-destructive/10 text-destructive" : statusBadgeColor[order.orderStatus] ?? "bg-secondary text-foreground"}`}>{order.orderStatus}</span>
+              </div>
+              {order.orderStatus === "Cancelled" ? <p className="mt-8 rounded-2xl bg-destructive/8 p-5 text-sm text-muted-foreground">This order was cancelled. Please contact customer support if you need help.</p> : order.orderStatus === "Completed" ? <><DeliveredCelebration /><div className="mt-8 border-t border-border pt-8">{user ? <RatingSection orderId={order._id} /> : <p className="text-center text-sm text-muted-foreground">Sign in to rate your order.</p>}</div></> : (
+                <ol className="mt-9 space-y-0">{ORDER_STATUS_FLOW.map((status, index) => { const done = index <= currentIndex; const isLast = index === ORDER_STATUS_FLOW.length - 1; return <li key={status} className="flex gap-4"><div className="flex flex-col items-center"><span className={`flex size-9 items-center justify-center rounded-full border-2 ${done ? "border-transparent bg-amber-gradient text-accent-foreground" : "border-border bg-card text-muted-foreground"}`}>{done ? <Check className="size-4" /> : <span className="size-2 rounded-full bg-current" />}</span>{!isLast ? <span className={`w-0.5 flex-1 ${index < currentIndex ? "bg-accent" : "bg-border"}`} /> : null}</div><div className={`pb-8 ${isLast ? "pb-0" : ""}`}><p className={`text-sm font-semibold ${done ? "" : "text-muted-foreground"}`}>{status}</p><p className="mt-1 text-xs text-muted-foreground">{statusCopy[status]}</p></div></li>; })}</ol>
+              )}
+              <div className="mt-8 grid gap-4 border-t border-border pt-6 sm:grid-cols-2"><div><p className="text-xs uppercase tracking-wider text-muted-foreground">Delivering to</p><p className="mt-1 text-sm">{order.customerDetails.address}</p></div><div className="sm:text-right"><p className="text-xs uppercase tracking-wider text-muted-foreground">Order total</p><p className="mt-1 font-display text-xl font-semibold">{formatCurrency(order.totalAmount, settings.currency)}</p><p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground sm:justify-end"><Truck className="size-3.5" />{order.paymentMethod === "cod" ? "Cash on delivery" : "Online payment"}</p></div></div>
+            </div>
+          )}
+        </div> : <div className="mt-8 rounded-3xl border border-dashed border-border p-8 text-center"><PackageSearch className="mx-auto size-8 text-muted-foreground" /><h2 className="mt-3 font-display text-xl font-semibold">Your delivery journey starts here</h2><p className="mt-2 text-sm text-muted-foreground">Your reference number is shown after checkout and in your order confirmation.</p></div>}
+
+        {user ? <section className="mt-12">
+          <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="eyebrow text-accent">YOUR ACCOUNT</p><h2 className="mt-2 font-display text-2xl font-semibold">Your orders</h2></div><span className="text-xs text-muted-foreground">{ordersQuery.data?.length ?? 0} orders</span></div>
+          <div className="mt-5">
+            {ordersQuery.isLoading ? <div className="space-y-3"><Skeleton className="h-20 w-full rounded-2xl" /><Skeleton className="h-20 w-full rounded-2xl" /></div> : ordersQuery.isError ? <ErrorState title="Couldn't load your orders" onRetry={() => void ordersQuery.refetch()} /> : (ordersQuery.data ?? []).length === 0 ? <EmptyState title="No orders yet" description="Your placed orders will appear here." /> : <ul className="space-y-3">{(ordersQuery.data ?? []).map((entry) => <li key={entry._id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5"><div className="min-w-0"><p className="text-sm font-semibold">{entry.code}</p><p className="mt-1 text-xs text-muted-foreground">{formatDateTime(entry.createdAt)} · {entry.items.map((item) => `${item.name} ×${item.quantity}`).join(", ")}</p><p className="mt-1 text-sm font-semibold">{formatCurrency(entry.totalAmount, settings.currency)}</p></div><div className="flex items-center gap-3"><span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">{entry.orderStatus}</span><Button size="sm" variant="outline" onClick={() => { setReference(entry.code); setActiveId(entry._id); setActiveCode(""); setActivePhone(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Track</Button></div></li>)}</ul>}
           </div>
-        )}
+        </section> : <p className="mt-8 text-center text-sm text-muted-foreground">Sign in to see your complete order history here.</p>}
       </div>
     </div>
   );
