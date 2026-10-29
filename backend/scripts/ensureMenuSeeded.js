@@ -12,6 +12,20 @@ const LEGACY_FOOD_SLUGS = [
 const LEGACY_FOOD_NAME_PATTERN = /burger|pizza|pasta|wrap|fries|coffee|shake|mojito|cooler|dessert|brownie|cake|sundae|cookie|cheesecake|salad|nugget|sandwich|cheesesteak|steak|garlic bread|chicken|wings|kebab|tikka|beverage|\\bdrinks?\\b|latte|cappuccino|milkshake|smoothie|ice cream|soft drink|soda|lemonade|juice/i;
 
 async function ensureMenuSeeded() {
+  // Vercel creates new serverless instances. Once the one-time catalog migration
+  // has completed, avoid upserting every category and product on every cold start.
+  const migrations = mongoose.connection.collection('catalogmigrations');
+  const migrationKey = 'zrcart-commerce-catalog-v3';
+  const existingMigration = await migrations.findOne({ _id: migrationKey });
+  if (existingMigration) {
+    return {
+      items: existingMigration.seededProductCount ?? PRODUCTS.length,
+      categories: existingMigration.activeCategorySlugs?.length ?? CATEGORIES.length,
+      migrationApplied: false,
+      skipped: true,
+    };
+  }
+
   const categoryIds = new Map();
   for (const categoryData of CATEGORIES) {
     const category = await Category.findOneAndUpdate(
@@ -34,9 +48,7 @@ async function ensureMenuSeeded() {
 
   // One-time migration: retire the old restaurant catalog and any products outside
   // the initial Zrcart seed. Products added later through admin remain untouched.
-  const migrations = mongoose.connection.collection('catalogmigrations');
-  const migrationKey = 'zrcart-commerce-catalog-v3';
-  const migration = await migrations.findOne({ _id: migrationKey });
+  const migration = null;
   if (!migration) {
     const activeSlugs = CATEGORIES.map((category) => category.slug);
     const legacyCategories = await Category.find({
