@@ -125,21 +125,6 @@ const createOrder = asyncHandler(async (req, res) => {
 
 const trackOrderByReference = asyncHandler(async (req, res) => {
   const code = String(req.body?.code || '').trim().toUpperCase();
-  const phone = String(req.body?.phone || '').replace(/\\D/g, '');
-  if (!/^LUM-[A-F0-9]{6}-[A-F0-9]{6}$/.test(code) || phone.length < 7 || phone.length > 15) {
-    return error(res, 400, 'Enter a valid reference number and registered phone number');
-  }
-  const order = await Order.findOne({ code }).select('-__v');
-  const storedPhone = String(order?.customerDetails?.phone || '').replace(/\\D/g, '');
-  // Always use the same response for missing orders and phone mismatches.
-  if (!order || storedPhone !== phone) return error(res, 404, 'We could not find an order with those details');
-  if (order.paymentMethod === 'online' && order.paymentStatus !== 'paid') return error(res, 404, 'We could not find an order with those details');
-  return success(res, 200, order, 'Order tracking retrieved');
-});
-
-
-const trackOrderByReference = asyncHandler(async (req, res) => {
-  const code = String(req.body?.code || '').trim().toUpperCase();
   const phone = String(req.body?.phone || '').replace(/\D/g, '');
   if (!/^LUM-[A-F0-9]{6}-[A-F0-9]{6}$/.test(code) || phone.length < 7 || phone.length > 15) {
     return error(res, 400, 'Enter a valid reference number and registered phone number');
