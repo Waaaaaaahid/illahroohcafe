@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { Check, PackageCheck, PackageSearch, Star, Truck } from "lucide-react";
 import { Button } from "@/components/ui/AppButton";
@@ -32,6 +32,7 @@ function OrderTrackingPage() {
 
   const query = useQuery({
     queryKey: ["order-tracking", activeId, activeCode, activePhone],
+    refetchInterval: activeId || activeCode ? 15000 : false,
     queryFn: () => activeId ? orderService.get(activeId) : orderService.trackByReference(activeCode, activePhone),
     enabled: Boolean(activeId || (activeCode && activePhone)),
     retry: false,
@@ -43,15 +44,15 @@ function OrderTrackingPage() {
   });
 
   useEffect(() => {
-    if (!query.data?._id) return;
+    if (!query.data?._id || !user) return;
     return orderService.subscribeOrder(query.data._id, (updatedOrder) => {
       queryClient.setQueryData(["order-tracking", activeId, activeCode, activePhone], updatedOrder);
     });
-  }, [query.data?._id, activeId, activeCode, activePhone, queryClient]);
+  }, [query.data?._id, activeId, activeCode, activePhone, queryClient, user]);
 
   const order = query.data;
   const currentIndex = order ? ORDER_STATUS_FLOW.indexOf(order.orderStatus) : -1;
-  const submitTracking = (event: React.FormEvent<HTMLFormElement>) => {
+  const submitTracking = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setActiveId("");
     setActiveCode(reference.trim().toUpperCase());
