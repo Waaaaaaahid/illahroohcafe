@@ -24,7 +24,7 @@ export function Navbar() {
   }, []);
   useEffect(() => setMobileOpen(false), [pathname]);
 
-  const links = [{ label: "Home", to: "/" }, { label: "Shop all", to: "/menu" }, { label: "New arrivals", to: "/menu" }, { label: "Our story", to: "/about" }];
+  const links = [{ label: "Home", to: "/" }, { label: "Shop all", to: "/menu" }, { label: "New arrivals", to: "/menu" }, { label: "Track your order", to: "/order-tracking" }];
 
   return (
     <header className={`sticky top-0 z-50 border-b border-[#e9e8e1] bg-[#fbfaf7]/95 backdrop-blur-xl transition-all duration-300 ${scrolled ? "shadow-[0_8px_28px_rgba(30,32,26,.06)]" : ""}`}>
