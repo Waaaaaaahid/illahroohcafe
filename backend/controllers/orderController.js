@@ -3,6 +3,7 @@ const { success, error } = require('../utils/response');
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Coupon = require('../models/Coupon');
+const crypto = require('crypto');
 
 const orderSubscribers = new Map();
 const adminSubscribers = new Set();
@@ -86,9 +87,18 @@ const createOrder = asyncHandler(async (req, res) => {
   const computedTotal = Number((discountedSubtotal + taxAmount + deliveryAmount).toFixed(2));
   if (clientTotal !== computedTotal) return error(res, 400, 'Order totals are invalid');
 
+  let referenceCode;
+  // Generate a customer-friendly reference and check the unique index before saving.
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const part = () => crypto.randomBytes(3).toString('hex').toUpperCase();
+    const candidate = `LUM-${part()}-${part()}`;
+    if (!(await Order.exists({ code: candidate }))) { referenceCode = candidate; break; }
+  }
+  if (!referenceCode) return error(res, 503, 'Could not generate an order reference. Please try again.');
+
   const order = await Order.create({
     user: req.user.id,
-    code: `MN-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`,
+    code: referenceCode,
     customerDetails,
     items: sanitizedItems,
     subtotal: clientSubtotal,
@@ -110,6 +120,21 @@ const createOrder = asyncHandler(async (req, res) => {
   // Never broadcast an unpaid online order to the admin dashboard.
   if (isVisibleToAdmin(order)) broadcastOrder(order, 'new-order');
   return success(res, 201, order, 'Order created successfully');
+});
+
+
+const trackOrderByReference = asyncHandler(async (req, res) => {
+  const code = String(req.body?.code || '').trim().toUpperCase();
+  const phone = String(req.body?.phone || '').replace(/\\D/g, '');
+  if (!/^LUM-[A-F0-9]{6}-[A-F0-9]{6}$/.test(code) || phone.length < 7 || phone.length > 15) {
+    return error(res, 400, 'Enter a valid reference number and registered phone number');
+  }
+  const order = await Order.findOne({ code }).select('-__v');
+  const storedPhone = String(order?.customerDetails?.phone || '').replace(/\\D/g, '');
+  // Always use the same response for missing orders and phone mismatches.
+  if (!order || storedPhone !== phone) return error(res, 404, 'We could not find an order with those details');
+  if (order.paymentMethod === 'online' && order.paymentStatus !== 'paid') return error(res, 404, 'We could not find an order with those details');
+  return success(res, 200, order, 'Order tracking retrieved');
 });
 
 const getOrders = asyncHandler(async (_req, res) => {
@@ -180,4 +205,4 @@ const subscribeToAdminOrders = asyncHandler(async (_req, res) => {
   _req.on('close', () => { clearInterval(heartbeat); adminSubscribers.delete(res); });
 });
 
-module.exports = { createOrder, getOrders, getOrderById, updateOrderStatus, getMyOrders, subscribeToOrder, subscribeToAdminOrders, broadcastOrder, isVisibleToAdmin };
+module.exports = { createOrder, trackOrderByReference, getOrders, getOrderById, updateOrderStatus, getMyOrders, subscribeToOrder, subscribeToAdminOrders, broadcastOrder, isVisibleToAdmin };
