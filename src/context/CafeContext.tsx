@@ -14,7 +14,7 @@ const FALLBACK_SETTINGS: CafeSettings = {
       { id: "discover-message", text: "DISCOVER SOMETHING GOOD — SHOP THE LATEST FINDS", enabled: true, order: 1, durationSeconds: 4, animation: "slide", backgroundColor: "#e9ede3", textColor: "#252720", link: "/menu", startsAt: null, endsAt: null },
     ],
   },
-  name: "",
+  name: "Lumoracurio",
   logo: "",
   description: "Everyday essentials, thoughtfully picked.",
   phone: "",
