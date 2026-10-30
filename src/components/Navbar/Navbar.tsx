@@ -34,8 +34,11 @@ export function Navbar() {
           <button type="button" onClick={() => setMobileOpen((open) => !open)} aria-label="Toggle navigation menu" aria-expanded={mobileOpen} className="flex h-10 w-10 items-center justify-center rounded-full text-[#34352e] hover:bg-white">{mobileOpen ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}</button>
           <Link to="/menu" aria-label="Search products" className="flex h-10 w-10 items-center justify-center rounded-full text-[#55574f] transition hover:bg-white"><Search className="h-[18px] w-[18px]" /></Link>
         </div>
-        <Link to="/" className="absolute left-1/2 flex -translate-x-1/2 items-center justify-center gap-2.5 whitespace-nowrap" aria-label="Lumoracurio home">
-          {settings.logo && !isLoading ? <img src={settings.logo} alt="Lumoracurio" className="h-9 max-w-[140px] object-contain" /> : <span className="font-serif text-[1.8rem] font-bold leading-none tracking-[-.055em] text-[#803b36] sm:text-[2rem]">Lumoracurio</span>}
+        <Link to="/" className="absolute left-1/2 flex -translate-x-1/2 items-center justify-center whitespace-nowrap text-center" aria-label="Lumora Curio home">
+          <span className="flex flex-col items-center font-serif font-bold leading-none text-[#803b36]">
+            <span className="text-[1.8rem] tracking-[-.055em] sm:text-[2rem]">Lumora</span>
+            <span className="mt-0.5 flex items-center gap-2 text-[1.15rem] tracking-[-.035em] sm:text-[1.3rem]"><span className="h-px w-5 bg-[#c9b7ad]" />Curio<span className="h-px w-5 bg-[#c9b7ad]" /></span>
+          </span>
         </Link>
         <div className="hidden items-center gap-1 lg:flex">
           {links.map((link) => <Link key={link.label} to={link.to} activeOptions={{ exact: link.to === "/" }} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${pathname === link.to ? "bg-[#e9ede3] text-[#343e2f]" : "text-[#65665e] hover:bg-white hover:text-[#252720]"}`}>{link.label}</Link>)}
