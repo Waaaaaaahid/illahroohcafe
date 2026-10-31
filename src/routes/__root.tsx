@@ -147,12 +147,13 @@ function WhatsAppEnquiry() {
 function SiteChrome() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
+  const isAuth = ["/login", "/register", "/forgot-password", "/reset-password"].includes(pathname);
   return (
     <div className="flex min-h-screen flex-col">
-      {isAdmin ? null : <Navbar />}
+      {isAdmin || isAuth ? null : <Navbar />}
       <main className="flex-1"><Outlet /></main>
-      {isAdmin ? null : <Footer />}
-      {isAdmin ? null : <WhatsAppEnquiry />}
+      {isAdmin || isAuth ? null : <Footer />}
+      {isAdmin || isAuth ? null : <WhatsAppEnquiry />}
       <CartDrawer />
       <ToastViewport />
     </div>

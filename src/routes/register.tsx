@@ -10,9 +10,9 @@ import { validateRegister, type FieldErrors, type RegisterForm } from "@/utils/v
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create your account" },
+      { title: "Create your account — Lumora Curio" },
       { name: "description", content: "Create an account for faster checkout, saved addresses and order tracking." },
-      { property: "og:title", content: "Create your account" },
+      { property: "og:title", content: "Create your account — Lumora Curio" },
       { property: "og:description", content: "Faster checkout, saved addresses and live order tracking." },
     ],
   }),
@@ -62,11 +62,11 @@ function RegisterPage() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="One minute now, thirty seconds at every checkout after."
+      subtitle="Save your details and make your next discovery even easier."
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-accent hover:underline">
+          <Link to="/login" className="font-semibold text-[#52634c] underline-offset-4 hover:underline">
             Sign in
           </Link>
         </>
@@ -80,6 +80,8 @@ function RegisterPage() {
             invalid={Boolean(errors.name)}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
             placeholder="Your full name"
+            autoComplete="name"
+            className="h-12 rounded-xl border-[#d9dfd5] bg-white px-4 focus:border-[#71816a] focus:ring-[#71816a]/20"
           />
         </Field>
         <Field id="register-email" label="Email" error={errors.email}>
@@ -90,6 +92,8 @@ function RegisterPage() {
             invalid={Boolean(errors.email)}
             onChange={(event) => setForm({ ...form, email: event.target.value })}
             placeholder="you@example.com"
+            autoComplete="email"
+            className="h-12 rounded-xl border-[#d9dfd5] bg-white px-4 focus:border-[#71816a] focus:ring-[#71816a]/20"
           />
         </Field>
         <Field id="register-phone" label="Phone" error={errors.phone}>
@@ -100,6 +104,8 @@ function RegisterPage() {
             invalid={Boolean(errors.phone)}
             onChange={(event) => setForm({ ...form, phone: event.target.value })}
             placeholder="+91 98200 00000"
+            autoComplete="tel"
+            className="h-12 rounded-xl border-[#d9dfd5] bg-white px-4 focus:border-[#71816a] focus:ring-[#71816a]/20"
           />
         </Field>
         <Field id="register-password" label="Password" error={errors.password}>
@@ -110,6 +116,8 @@ function RegisterPage() {
             invalid={Boolean(errors.password)}
             onChange={(event) => setForm({ ...form, password: event.target.value })}
             placeholder="Minimum 6 characters"
+            autoComplete="new-password"
+            className="h-12 rounded-xl border-[#d9dfd5] bg-white px-4 focus:border-[#71816a] focus:ring-[#71816a]/20"
           />
         </Field>
         <Field id="register-confirm" label="Confirm password" error={errors.confirmPassword}>
@@ -120,9 +128,11 @@ function RegisterPage() {
             invalid={Boolean(errors.confirmPassword)}
             onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
             placeholder="Repeat your password"
+            autoComplete="new-password"
+            className="h-12 rounded-xl border-[#d9dfd5] bg-white px-4 focus:border-[#71816a] focus:ring-[#71816a]/20"
           />
         </Field>
-        <Button type="submit" size="lg" loading={loading} className="w-full">
+        <Button type="submit" size="lg" loading={loading} className="h-12 w-full rounded-xl bg-[#344a35] text-sm text-white shadow-[0_8px_20px_rgba(52,74,53,.16)] hover:bg-[#263a2a]">
           Create account
         </Button>
       </form>

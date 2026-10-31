@@ -13,9 +13,9 @@ export const Route = createFileRoute("/reset-password")({
   }),
   head: () => ({
     meta: [
-      { title: "Set a new password — Zrcart" },
-      { name: "description", content: "Choose a new password for your Zrcart account using your reset token." },
-      { property: "og:title", content: "Set a new Zrcart password" },
+      { title: "Set a new password — Lumora Curio" },
+      { name: "description", content: "Choose a new password for your Lumora Curio account using your reset token." },
+      { property: "og:title", content: "Set a new Lumora Curio password" },
       { property: "og:description", content: "Complete your password reset securely." },
     ],
   }),
