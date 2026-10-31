@@ -85,64 +85,141 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function WhatsAppEnquiry() {
-  const { settings } = useCafe();
   const [open, setOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<"sales" | "support" | null>(null);
+
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveMenu(null);
+        setOpen(false);
+      }
+    };
     const onClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest("[data-whatsapp-enquiry]")) setOpen(false);
+      if (!target.closest("[data-whatsapp-enquiry]")) {
+        setActiveMenu(null);
+        setOpen(false);
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     document.addEventListener("click", onClickOutside);
-    return () => { window.removeEventListener("keydown", onKeyDown); document.removeEventListener("click", onClickOutside); };
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("click", onClickOutside);
+    };
   }, [open]);
 
   const contacts = [
-    { title: "Sales & Enquiries", number: settings.whatsappSalesNumber || settings.whatsappNumber || settings.phone, message: "Hi Lumora Curio, I have a question about your products and would like to know more.", Icon: ShoppingBag },
-    { title: "Customer Support", number: settings.whatsappSupportNumber, message: "Hi Lumora Curio, I need some assistance. Could you please help me?", Icon: Headset },
+    { label: "Executive 01", number: "919560277215" },
+    { label: "Executive 02", number: "919917932247" },
   ];
-  const openChat = (number: string, message: string) => {
-    const digits = number.replace(/\D/g, "");
-    if (!digits) return;
-    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+
+  const openChat = (number: string, category: "sales" | "support") => {
+    const message = category === "sales"
+      ? "Hi Lumora Curio, I have a question about your products and would like to know more."
+      : "Hi Lumora Curio, I need some assistance. Could you please help me?";
+    window.open(`https://wa.me/${number}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    setActiveMenu(null);
     setOpen(false);
   };
 
-  return <div data-whatsapp-enquiry className="fixed bottom-20 left-3 z-[60] sm:bottom-7 sm:left-5">
-    <AnimatePresence>
-      {open && <motion.div
-        initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
-        transition={{ duration: .2, ease: "easeOut" }}
-        className="absolute bottom-0 left-[calc(100%+9px)] flex flex-col gap-2 sm:left-[calc(100%+14px)] sm:gap-3"
-        style={{ width: "max-content", maxWidth: "calc(100vw - 82px)" }}
-      >
-        {contacts.map(({ title, number, message, Icon }, index) => {
-          const available = Boolean(number?.replace(/\D/g, ""));
-          return <motion.button key={title} type="button" disabled={!available}
-            onClick={() => openChat(number || "", message)}
-            initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: .04 + index * .06, duration: .2 }}
-            className="group flex min-h-11 w-full items-center gap-2 rounded-full border border-white/90 bg-white px-3 py-2 text-left shadow-[0_4px_16px_rgba(0,0,0,.15)] transition hover:shadow-[0_7px_20px_rgba(0,0,0,.18)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:gap-3 sm:px-4 sm:py-2.5"
+  const groups = [
+    { id: "sales" as const, title: "Sales & Enquiries", Icon: ShoppingBag },
+    { id: "support" as const, title: "Customer Support", Icon: Headset },
+  ];
+
+  return (
+    <div data-whatsapp-enquiry className="fixed bottom-20 left-3 z-[60] sm:bottom-7 sm:left-5">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, x: -14 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="absolute bottom-0 left-[calc(100%+9px)] flex flex-col gap-2 sm:left-[calc(100%+14px)] sm:gap-3"
+            style={{ width: "max-content", maxWidth: "calc(100vw - 82px)" }}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#eaf7ef] text-[#078447] sm:h-8 sm:w-8">
-              <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.1} />
-            </span>
-            <span className="whitespace-nowrap text-[11px] font-semibold text-[#22251f] sm:text-sm">{title}</span>
-            <ArrowUpRight className="ml-0.5 h-3 w-3 shrink-0 text-[#078447] sm:ml-1 sm:h-4 sm:w-4" />
-          </motion.button>;
-        })}
-      </motion.div>}
-    </AnimatePresence>
-    <button type="button" onClick={() => setOpen((value) => !value)}
-      aria-label={open ? "Close WhatsApp contacts" : "Open WhatsApp contacts"} aria-expanded={open}
-      className="flex h-11 items-center gap-2 rounded-full bg-[#00c853] px-3 text-white shadow-[0_5px_18px_rgba(0,200,83,.3)] transition hover:bg-[#00b84a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] focus-visible:ring-offset-2 sm:h-12 sm:gap-2.5 sm:px-4"
-    >
-      {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
-      <span className="text-xs font-semibold sm:text-sm">WhatsApp Enquiry</span>
-    </button>
-  </div>;
+            {groups.map(({ id, title, Icon }, index) => {
+              const expanded = activeMenu === id;
+              return (
+                <div
+                  key={id}
+                  className="relative"
+                  onMouseEnter={() => setActiveMenu(id)}
+                  onMouseLeave={() => setActiveMenu((current) => current === id ? null : current)}
+                >
+                  <AnimatePresence>
+                    {expanded && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 7, scale: 0.98 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        className="absolute bottom-[calc(100%+9px)] left-0 z-20 flex min-w-[205px] flex-col gap-1.5 rounded-2xl border border-[#e7eee8] bg-white p-2 shadow-[0_8px_28px_rgba(0,0,0,.17)] sm:min-w-[230px] sm:p-2.5"
+                      >
+                        {contacts.map((contact, contactIndex) => (
+                          <motion.button
+                            key={contact.number}
+                            type="button"
+                            onClick={() => openChat(contact.number, id)}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: contactIndex * 0.045, duration: 0.16 }}
+                            className="flex min-h-10 items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition hover:bg-[#edf7f0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00a84f]"
+                          >
+                            <span className="min-w-0">
+                              <span className="block text-xs font-semibold text-[#243329]">{id === "sales" ? "Sales" : "Support"} {contact.label}</span>
+                              <span className="mt-0.5 block text-[11px] tracking-wide text-[#68766b]">+{contact.number.slice(0, 2)} {contact.number.slice(2, 7)} {contact.number.slice(7)}</span>
+                            </span>
+                            <ArrowUpRight className="h-4 w-4 shrink-0 text-[#078447]" />
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <motion.button
+                    type="button"
+                    onClick={() => setActiveMenu((current) => current === id ? null : id)}
+                    aria-expanded={expanded}
+                    aria-haspopup="true"
+                    initial={{ opacity: 0, x: 18 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.04 + index * 0.06, duration: 0.2 }}
+                    className="group flex min-h-11 w-full items-center gap-2 rounded-full border border-white/90 bg-white px-3 py-2 text-left shadow-[0_4px_16px_rgba(0,0,0,.15)] transition hover:shadow-[0_7px_20px_rgba(0,0,0,.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] sm:min-h-12 sm:gap-3 sm:px-4 sm:py-2.5"
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#eaf7ef] text-[#078447] sm:h-8 sm:w-8">
+                      <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.1} />
+                    </span>
+                    <span className="whitespace-nowrap text-[11px] font-semibold text-[#22251f] sm:text-sm">{title}</span>
+                    <ArrowUpRight className={`ml-0.5 h-3 w-3 shrink-0 text-[#078447] transition-transform sm:ml-1 sm:h-4 sm:w-4 ${expanded ? "-rotate-45" : ""}`} />
+                  </motion.button>
+                </div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <button
+        type="button"
+        onClick={() => {
+          setOpen((value) => {
+            if (value) setActiveMenu(null);
+            return !value;
+          });
+        }}
+        aria-label={open ? "Close WhatsApp enquiry options" : "Open WhatsApp enquiry options"}
+        aria-expanded={open}
+        className="flex h-11 items-center gap-2 rounded-full bg-[#00c853] px-3 text-white shadow-[0_5px_18px_rgba(0,200,83,.3)] transition hover:bg-[#00b84a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00c853] focus-visible:ring-offset-2 sm:h-12 sm:gap-2.5 sm:px-4"
+      >
+        {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
+        <span className="text-xs font-semibold sm:text-sm">WhatsApp Inquiry</span>
+      </button>
+    </div>
+  );
 }
 function SiteChrome() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
