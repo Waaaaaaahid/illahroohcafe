@@ -11,7 +11,7 @@ import { useToast } from "@/context/ToastContext";
 import { couponService, type Coupon } from "@/services/couponService";
 import { formatCurrency } from "@/utils/format";
 
-export const Route = createFileRoute("/admin/coupons")({ head: () => ({ meta: [{ title: "Coupons — Zrcart Admin" }] }), component: AdminCoupons });
+export const Route = createFileRoute("/admin/coupons")({ head: () => ({ meta: [{ title: "Coupons — Lumora Curio Admin" }] }), component: AdminCoupons });
 
 type Form = { code: string; type: "percentage" | "fixed"; value: string; minOrderAmount: string; maxDiscount: string; startsAt: string; expiresAt: string; usageLimit: string; active: boolean };
 const blank: Form = { code: "", type: "percentage", value: "10", minOrderAmount: "0", maxDiscount: "", startsAt: "", expiresAt: "", usageLimit: "", active: true };
