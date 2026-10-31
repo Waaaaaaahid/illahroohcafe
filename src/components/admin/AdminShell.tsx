@@ -40,8 +40,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: (() => void) | undefined 
   return (
     <div className="zrcart-admin-sidebar flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border/70 px-5 pb-6 pt-7">
-        <div className="flex items-center gap-3"><span className="flex size-11 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-lg"><Store className="size-5" /></span><div><p className="text-[17px] font-black tracking-[0.16em] text-sidebar-foreground">ZRCART</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.19em] text-sidebar-foreground/50">Commerce studio</p></div></div>
-        <div className="mt-5 flex items-center gap-2 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40 px-3 py-2"><span className="inline-flex size-2 rounded-full bg-emerald-400" /><span className="text-[11px] font-semibold tracking-wide text-sidebar-foreground/70">Store control center</span></div>
+        <div className="flex items-center gap-3"><span className="flex size-11 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-lg"><Store className="size-5" /></span><div><p className="text-[17px] font-black tracking-[0.16em] text-sidebar-foreground">LUMORA</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.19em] text-sidebar-foreground/50">Curio Admin Studio</p></div></div>
+        <div className="mt-5 flex items-center gap-2 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40 px-3 py-2"><span className="inline-flex size-2 rounded-full bg-emerald-400" /><span className="text-[11px] font-semibold tracking-wide text-sidebar-foreground/70">Store management</span></div>
       </div>
       <p className="px-6 pb-3 pt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35">Workspace</p>
       <NavLinks onNavigate={onNavigate} />
@@ -134,10 +134,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <div className="lg:pl-[276px]">
         <header className="zrcart-admin-mobilebar sticky top-0 z-40 flex items-center justify-between border-b border-border bg-card/90 px-4 py-3.5 backdrop-blur lg:hidden">
           <button type="button" aria-label="Open menu" onClick={() => setDrawerOpen(true)} className="rounded-full p-2 text-foreground hover:bg-secondary"><Menu className="size-5" /></button>
-          <p className="text-sm font-black tracking-[0.16em]">ZRCART <span className="font-medium tracking-normal text-muted-foreground">Studio</span></p>
+          <p className="text-sm font-black tracking-[0.16em]">LUMORA <span className="font-medium tracking-normal text-muted-foreground">Studio</span></p>
           <span className="size-9" aria-hidden />
         </header>
-        <main className="zrcart-admin-main container-page min-h-screen px-4 py-6 sm:px-6 lg:px-9 lg:py-9"><div className="mb-7 hidden items-center justify-between border-b border-border/70 pb-5 lg:flex"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Zrcart / Workspace</p><p className="mt-1 text-sm font-medium text-foreground">Manage your store, orders and customers.</p></div><div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"><Activity className="size-3.5 text-emerald-600" /> Admin workspace</div></div>{children}</main>
+        <main className="zrcart-admin-main container-page min-h-screen px-4 py-6 sm:px-6 lg:px-9 lg:py-9"><div className="mb-7 hidden items-center justify-between border-b border-border/70 pb-5 lg:flex"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Lumora Curio / Workspace</p><p className="mt-1 text-sm font-medium text-foreground">Manage your store, orders and customers.</p></div><div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground"><Activity className="size-3.5 text-emerald-600" /> Admin workspace</div></div>{children}</main>
       </div>
     </div>
   );
