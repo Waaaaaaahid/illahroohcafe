@@ -5,6 +5,7 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, ShieldCheck, Sparkl
 import { useCart } from "@/context/CartContext";
 import { menuService } from "@/services/menuService";
 import type { Category, MenuItem } from "@/lib/types";
+import { reviewService, type Review } from "@/services/reviewService";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -146,6 +147,8 @@ function HomePage() {
   });
   const categories = (categoriesQuery.data ?? []).filter((category) => category.active);
   const products = (productsQuery.data ?? []).filter((product) => product.available);
+  const testimonialsQuery = useQuery({ queryKey: ["featured-reviews"], queryFn: reviewService.listFeatured, staleTime: 30_000 });
+  const testimonials = testimonialsQuery.data ?? [];
   const featuredProducts = products.filter((product) => product.popular).slice(0, 4);
   const displayProducts = featuredProducts.length ? featuredProducts : products.slice(0, 4);
 
@@ -161,6 +164,28 @@ function HomePage() {
       <div className="mb-8 flex items-end justify-between gap-4 sm:mb-10"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#78856c]">A good place to start</p><h2 className="mt-2 text-2xl font-medium tracking-[-.04em] sm:text-3xl">The things everyone's loving.</h2><p className="mt-2 text-xs text-[#85867e] sm:text-sm">Products selected for your everyday life.</p></div><Link to="/menu" className="flex shrink-0 items-center gap-1 text-xs font-semibold">Shop all <ArrowRight className="h-4 w-4" /></Link></div>
       {productsQuery.isLoading ? <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{[1,2,3,4].map((n) => <div key={n} className="aspect-[4/5] animate-pulse rounded-2xl bg-[#f0efe9]" />)}</div> : productsQuery.isError ? <p className="rounded-2xl border border-dashed border-[#d9d9d0] p-8 text-center text-sm text-[#73746c]">Products couldn't load right now. Please try again shortly.</p> : displayProducts.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-4">{displayProducts.map((product) => <ProductCard key={product._id} product={product} categoryName={categories.find((item) => item.slug === product.category)?.name ?? product.category.replaceAll("-", " ")} />)}</div> : <p className="rounded-2xl border border-dashed border-[#d9d9d0] p-8 text-center text-sm text-[#73746c]">Products will appear here when available.</p>}
     </section>
+
+    {testimonials.length > 0 ? <section className="border-y border-[#e9e8e1] bg-white py-14 sm:py-20">
+      <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-14">
+        <div className="mx-auto mb-9 max-w-xl text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#78856c]">Kind words</p>
+          <h2 className="mt-2 font-serif text-3xl font-normal tracking-[-.025em] text-[#171815] sm:text-4xl">Loved by our customers</h2>
+          <p className="mt-3 text-sm text-[#77786f]">A few words from people who shop with us.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {testimonials.slice(0, 6).map((review: Review) => <article key={review._id} className="rounded-2xl border border-[#e9e8e1] bg-[#fbfaf7] p-5 sm:p-6">
+            <div className="flex items-center gap-1 text-[#a0782c]" aria-label={`${review.rating} out of 5 stars`}>
+              {[1, 2, 3, 4, 5].map((star) => <Star key={star} className={`h-4 w-4 ${star <= review.rating ? "fill-current" : "opacity-30"}`} />)}
+            </div>
+            <p className="mt-4 text-sm leading-6 text-[#55574f]">“{review.comment}”</p>
+            <div className="mt-5 border-t border-[#e9e8e1] pt-4">
+              <p className="text-sm font-semibold text-[#242521]">{review.authorName || review.user?.name || "Verified customer"}</p>
+              {review.authorRole ? <p className="mt-1 text-xs text-[#85867e]">{review.authorRole}</p> : null}
+            </div>
+          </article>)}
+        </div>
+      </div>
+    </section> : null}
     <section className="mx-5 mb-14 overflow-hidden rounded-2xl bg-[#e9ede3] sm:mx-8 sm:mb-20 lg:mx-auto lg:max-w-[1352px]"><div className="grid items-center gap-8 px-6 py-10 sm:px-10 sm:py-14 lg:grid-cols-[1fr_auto] lg:px-16"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#6b7d5d]">Our promise</p><h2 className="mt-3 max-w-2xl text-3xl font-medium leading-tight tracking-[-.05em] sm:text-4xl">Less scrolling. Better finds. <span className="font-serif italic font-normal text-[#718265]">More living.</span></h2><p className="mt-4 max-w-lg text-sm leading-6 text-[#6c7065]">We're building a collection of practical, good-looking things that make everyday life feel a little easier.</p></div><Link to="/menu" className="inline-flex w-fit items-center gap-3 rounded-full bg-[#242521] px-6 py-3.5 text-xs font-semibold text-white transition hover:bg-[#4c5845]">Discover the collection <ArrowRight className="h-4 w-4" /></Link></div></section>
   </div>;
 }
