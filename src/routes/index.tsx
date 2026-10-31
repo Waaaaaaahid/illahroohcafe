@@ -13,6 +13,13 @@ export const Route = createFileRoute("/")({
     { property: "og:title", content: "Zrcart — Everyday finds. Better prices." },
     { property: "og:description", content: "Shop useful finds for your everyday life." },
   ] }),
+  loader: async () => {
+    const [categories, products] = await Promise.all([
+      menuService.categories(),
+      menuService.list(),
+    ]);
+    return { categories, products };
+  },
   // The announcement bar is rendered globally by Navbar; keep the homepage banner-free.
   component: HomePage,
 });
@@ -124,8 +131,19 @@ function HeroCarousel() {
 }
 
 function HomePage() {
-  const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: menuService.categories });
-  const productsQuery = useQuery({ queryKey: ["menu"], queryFn: menuService.list });
+  const initialData = Route.useLoaderData();
+  const categoriesQuery = useQuery({
+    queryKey: ["categories"],
+    queryFn: menuService.categories,
+    initialData: initialData.categories,
+    staleTime: 30_000,
+  });
+  const productsQuery = useQuery({
+    queryKey: ["menu"],
+    queryFn: () => menuService.list(),
+    initialData: initialData.products,
+    staleTime: 30_000,
+  });
   const categories = (categoriesQuery.data ?? []).filter((category) => category.active);
   const products = (productsQuery.data ?? []).filter((product) => product.available);
   const featuredProducts = products.filter((product) => product.popular).slice(0, 4);

@@ -2,16 +2,15 @@ import { STORAGE_KEYS } from "@/constants";
 import type { AuthSession } from "@/lib/types";
 
 const configuredApiUrl = (import.meta.env["VITE_API_URL"] as string | undefined)?.trim();
+const productionApiUrl = "https://illahroohcafe.vercel.app/api";
 
 function getDefaultApiUrl() {
   // Production/staging: explicitly point to the deployed Express API.
   if (configuredApiUrl) return configuredApiUrl.replace(/\/$/, "");
 
-  // Local VS Code + GitHub Codespaces: use the Vite same-origin proxy.
-  // This avoids browser CORS/port forwarding problems entirely.
-  if (import.meta.env.DEV) return "/api";
-
-  return "/api";
+  // The storefront and API are deployed separately, so a relative production
+  // URL would send catalog requests back to the frontend instead of the API.
+  return import.meta.env.PROD ? productionApiUrl : "/api";
 }
 
 export const API_BASE_URL = getDefaultApiUrl();
