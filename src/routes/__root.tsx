@@ -148,8 +148,8 @@ function WhatsAppEnquiry() {
                 <div
                   key={id}
                   className="relative"
-                  onMouseEnter={() => setActiveMenu(id)}
-                  onMouseLeave={() => setActiveMenu((current) => current === id ? null : current)}
+                  onMouseEnter={() => { if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setActiveMenu(id); }}
+                  onMouseLeave={() => { if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setActiveMenu((current) => current === id ? null : current); }}
                 >
                   <AnimatePresence>
                     {expanded && (
@@ -182,7 +182,10 @@ function WhatsAppEnquiry() {
                   </AnimatePresence>
                   <motion.button
                     type="button"
-                    onClick={() => setActiveMenu((current) => current === id ? null : id)}
+                    onClick={() => {
+                      const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+                      setActiveMenu((current) => canHover ? id : current === id ? null : id);
+                    }}
                     aria-expanded={expanded}
                     aria-haspopup="true"
                     initial={{ opacity: 0, x: 18 }}
