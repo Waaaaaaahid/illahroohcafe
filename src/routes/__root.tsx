@@ -100,8 +100,8 @@ function WhatsAppEnquiry() {
   }, [open]);
 
   const contacts = [
-    { title: "Sales & Enquiries", number: settings.whatsappSalesNumber || settings.whatsappNumber || settings.phone, message: `Hi ${settings.name || "Zrcart"}, I have a sales enquiry.`, Icon: ShoppingBag },
-    { title: "Customer Support", number: settings.whatsappSupportNumber, message: `Hi ${settings.name || "Zrcart"}, I need customer support.`, Icon: Headset },
+    { title: "Sales & Enquiries", number: settings.whatsappSalesNumber || settings.whatsappNumber || settings.phone, message: "Hi Lumora Curio, I have a question about your products and would like to know more.", Icon: ShoppingBag },
+    { title: "Customer Support", number: settings.whatsappSupportNumber, message: "Hi Lumora Curio, I need some assistance. Could you please help me?", Icon: Headset },
   ];
   const openChat = (number: string, message: string) => {
     const digits = number.replace(/\D/g, "");
