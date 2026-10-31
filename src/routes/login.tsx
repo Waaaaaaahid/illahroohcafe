@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { LayoutGroup, motion } from "framer-motion";
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight, Leaf, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/AppButton";
@@ -105,21 +105,24 @@ export function AuthLayout({
   subtitle,
   children,
   footer,
+  variant = "login",
 }: {
   title: string;
   subtitle: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  variant?: "login" | "register";
 }) {
   return (
     <div className="bg-[#f7f7f2] px-4 py-8 sm:px-6 sm:py-12">
+      <LayoutGroup id="lumora-auth-panels">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-[#e5e7df] bg-white shadow-[0_24px_80px_rgba(36,48,35,.12)] md:min-h-[590px] md:grid-cols-[.95fr_1.05fr]"
       >
-        <aside className="relative isolate flex min-h-[210px] flex-col justify-between overflow-hidden bg-[#29392d] p-6 text-white sm:min-h-[250px] sm:p-9 md:min-h-full md:p-11">
+        <motion.aside layoutId="lumora-auth-photo" transition={{ layout: { duration: 0.72, ease: [0.22, 1, 0.36, 1] } }} className={`relative isolate flex min-h-[210px] flex-col justify-between overflow-hidden bg-[#29392d] p-6 text-white sm:min-h-[250px] sm:p-9 md:min-h-full md:p-11 ${variant === "register" ? "md:order-2" : "md:order-1"}`}>
           <img
             src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=85"
             alt=""
@@ -153,8 +156,8 @@ export function AuthLayout({
               <ArrowUpRight className="ml-auto size-4" />
             </div>
           </div>
-        </aside>
-        <div className="flex items-center px-6 py-8 sm:px-10 sm:py-10 md:px-12 lg:px-16">
+        </motion.aside>
+        <motion.div layoutId="lumora-auth-form" transition={{ layout: { duration: 0.72, ease: [0.22, 1, 0.36, 1] } }} className={`flex items-center px-6 py-8 sm:px-10 sm:py-10 md:px-12 lg:px-16 ${variant === "register" ? "md:order-1" : "md:order-2"}`}>
           <div className="mx-auto w-full max-w-sm">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#7b866f]">
               Welcome to Lumora Curio
@@ -169,8 +172,9 @@ export function AuthLayout({
               A considered collection for everyday living
             </p>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
+      </LayoutGroup>
     </div>
   );
 }
