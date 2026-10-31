@@ -61,6 +61,7 @@ function RegisterPage() {
 
   return (
     <AuthLayout
+      variant="register"
       title="Create your account"
       subtitle="Save your details and make your next discovery even easier."
       footer={
