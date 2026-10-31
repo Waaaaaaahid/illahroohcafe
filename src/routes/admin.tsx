@@ -5,10 +5,10 @@ import { AdminShell } from "@/components/admin/AdminShell";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Console — Zrcart" },
-      { name: "description", content: "Manage menu, orders, users and settings for Zrcart." },
-      { property: "og:title", content: "Admin Console — Zrcart" },
-      { property: "og:description", content: "Manage menu, orders, users and settings for Zrcart." },
+      { title: "Admin Console — Lumora Curio" },
+      { name: "description", content: "Manage menu, orders, users and settings for Lumora Curio." },
+      { property: "og:title", content: "Admin Console — Lumora Curio" },
+      { property: "og:description", content: "Manage menu, orders, users and settings for Lumora Curio." },
     ],
   }),
   component: AdminLayout,
