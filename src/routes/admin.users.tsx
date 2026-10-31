@@ -15,10 +15,10 @@ import type { User, UserRole } from "@/lib/types";
 export const Route = createFileRoute("/admin/users")({
   head: () => ({
     meta: [
-      { title: "Users — Zrcart Admin" },
-      { name: "description", content: "Manage customer and admin accounts for Zrcart." },
-      { property: "og:title", content: "Users — Zrcart Admin" },
-      { property: "og:description", content: "Manage customer and admin accounts for Zrcart." },
+      { title: "Users — Lumora Curio Admin" },
+      { name: "description", content: "Manage customer and admin accounts for Lumora Curio." },
+      { property: "og:title", content: "Users — Lumora Curio Admin" },
+      { property: "og:description", content: "Manage customer and admin accounts for Lumora Curio." },
     ],
   }),
   component: AdminUsers,
